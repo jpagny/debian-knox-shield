@@ -7,8 +7,8 @@ source "$(dirname "$0")/../core/execute_task.sh"
 update_and_upgrade() {
   local name="System Update and Upgrade"
   local prereq="Updating package lists and upgrading installed packages"
-  local actions="sudo apt-get update -y"
-  local configs="sudo apt-get upgrade -y"
+  local actions="apt-get update -y"
+  local configs="apt-get upgrade -y"
 
   execute_task "$name" "$prereq" "$actions" "$configs"
 }

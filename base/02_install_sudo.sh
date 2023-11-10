@@ -7,7 +7,7 @@ source "$(dirname "$0")/../core/execute_task.sh"
 install_sudo() {
   local name="Install sudo"
   local prereq=""
-  local actions="sudo apt-get install -y sudo"
+  local actions="apt-get install -y sudo"
   
   # Check if sudo is installed
   if ! command -v sudo &> /dev/null; then

@@ -7,7 +7,7 @@ source "$(dirname "$0")/../core/execute_task.sh"
 install_jq() {
   local prereq="Checking for jq installation"
   local name="Install jq"
-  local actions="sudo apt-get install -y jq"
+  local actions="apt-get install -y jq"
   
   # Check if jq is installed
   if ! command -v jq &> /dev/null; then
@@ -23,25 +23,38 @@ ask_for_username_approval() {
 
   while [ "$approval" != "y" ]; do
     user_data=$(curl -s https://randomuser.me/api/)
-    username=$(echo $user_data | jq -r '.results[0].login.username')
+    
+    # Log the fetched JSON for debugging purposes
+    log_info "Fetched JSON data: $user_data"
 
-    echo "Generated username: $username"
-    read -p "Do you like this username? (y/n): " approval
+    username=$(echo "$user_data" | jq -r '.results[0].login.username')
 
+    # Log the extracted username for debugging
+    log_info "Extracted username: $username"
+
+    if [ -z "$username" ]; then
+      echo "No username was extracted. There might be an issue with the API or jq parsing."
+      continue
+    fi
+
+    log_info "Generated username: $username"
+    read -p "Do you like this username : $username ? (y/n): " approval
+    
     if [ "$approval" != "y" ]; then
       log_info "Fetching a new username..."
     fi
   done
 
-  echo $username
+  echo "$username"
 }
+
 
 # Function to generate a new user with sudo privileges
 add_user_with_sudo() {
   # Install jq as a prerequisite
   install_jq
 
-  # Ask for username approval
+  # Ask for username approval and capture the returned username
   local username=$(ask_for_username_approval)
   
   # Set your own password
@@ -51,8 +64,8 @@ add_user_with_sudo() {
   # Add the user to the system with the generated username and the provided password
   local prereq="Preparing to add new user with sudo privileges"
   local name="Add User"
-  local actions="sudo adduser --gecos '' --disabled-password $username"
-  local configs="echo '$username:$password' | sudo chpasswd; sudo usermod -aG sudo $username"
+  local actions="sudo adduser --gecos '' --disabled-password \"$username\""
+  local configs="echo '$username:$password' | chpasswd; usermod -aG sudo \"$username\""
 
   execute_task "$prereq" "$name" "$actions" "$configs"
 
@@ -60,6 +73,7 @@ add_user_with_sudo() {
   echo "Username: $username" > /tmp/user_credentials.txt
   echo "Password: $password" >> /tmp/user_credentials.txt
 }
+
 
 # Run the function to add a new user with sudo
 add_user_with_sudo

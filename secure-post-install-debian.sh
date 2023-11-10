@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Define the paths for the installation scripts
+CORE_PATH="$(dirname "$0")/core"
 BASE_PATH="$(dirname "$0")/base"
 CUSTOM_PATH="$(dirname "$0")/custom"
 
 # Source the core functions
-source "$BASE_PATH/../core/logger.sh"
-source "$BASE_PATH/../core/execute_task.sh"
-source "$BASE_PATH/../core/executor.sh"
+source "$CORE_PATH/logger.sh"
+source "$CORE_PATH/execute_task.sh"
+source "$CORE_PATH/executor.sh"
 
 # Execute all scripts in the /base directory
 execute_scripts_in_directory "$BASE_PATH"
