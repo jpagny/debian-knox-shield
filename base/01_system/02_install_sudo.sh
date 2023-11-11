@@ -6,7 +6,7 @@ source "$(dirname "$0")/../core/logger.sh"
 
 ### Task - install Sudo
 #
-# Function..........: install_sudo
+# Function..........: task_install_sudo
 # Description.......: Installs the sudo package if it is not already installed.
 # Parameters........: None
 # Returns...........: 
@@ -20,10 +20,10 @@ task_install_sudo() {
   local name="Install sudo"
   local isRootRequired=true
   local prereq="check_prerequisites_install_sudo"
-  local actions="apt-get install -y sudo"
-  local configs=""
+  local actions="run_action_install_sudo"
+  local postActions=""
   
-  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$configs"; then
+  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
     log_error "Installation of sudo failed."
     return 1
   fi
@@ -34,12 +34,12 @@ task_install_sudo() {
 
 ### Check Prerequisites install sudo
 #
-# Function..........: check_prerequisites
-# Description.......: Checks if the APT package manager is available and if sudo is already installed.
+# Function..........: check_prerequisites_install_sudo
+# Description.......: Checks if the APT package manager is available.
 #                     Intended for use in Debian-based systems.
 # Returns...........: 
-#              - 1: If APT is available and sudo is not installed.
-#              - 2: If APT is not available or sudo is already installed.
+#              - 0: If APT is available.
+#              - 1: If APT is not available.
 # Output............: Logs a message indicating either the absence of APT or the presence of sudo.
 #
 ###
@@ -51,10 +51,26 @@ check_prerequisites_install_sudo() {
     return 1
   fi
 
-  # Check if sudo is already installed
-  if command -v sudo &> /dev/null; then
-    log_info "sudo is already installed on the system."
-    return 0
+  return 0
+}
+
+### Run action - Install Sudo
+#
+# Function..........: run_action_install_sudo
+# Description.......: Installs the 'sudo' package if it's not already installed.
+#                     This function is intended for use in Debian-based systems
+#                     where 'sudo' might not be pre-installed.
+# Returns...........: 
+#              - 0: If the installation of 'sudo' was successful or if 'sudo' is already installed.
+#              - 1: If the installation of 'sudo' failed.
+# Output............: Logs a message indicating the success or failure of the installation.
+#
+###
+run_action_install_sudo(){
+
+  # install sudo package
+  if ! install_package "sudo"; then
+    return 1
   fi
 
   return 0

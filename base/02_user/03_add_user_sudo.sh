@@ -4,12 +4,12 @@
 source "$(dirname "$0")/../core/execute_task.sh"
 source "$(dirname "$0")/../core/logger.sh"
 
-### Add User with Sudo Privileges
+local username
+
+### Task add user with sudo privileges
 #
 # Function..........: add_user_with_sudo_privileges
 # Description.......: Creates a new user and grants them sudo privileges.
-# Parameters........: 
-#              - $1: Username for the new user.
 # Returns...........: 
 #              - 0: If the user is successfully created and granted sudo privileges.
 #              - Non-zero: If there is an error during the user creation or privilege assignment.
@@ -17,33 +17,57 @@ source "$(dirname "$0")/../core/logger.sh"
 #
 ###
 task_add_user_with_sudo_privileges() {  
-  # Ask for username approval and capture the returned username
-  local username=$(ask_for_username_approval)
-  
-  # Set your own password
-  read -sp "Enter a new password for the user: " password
-  echo # Move to a new line
 
   # Add the user to the system with the generated username and the provided password
   local name="Add User"
   local isRootRequired=true
   local prereq="check_prerequisites_add_user_with_sudo_privileges"
-  local actions="sudo adduser --gecos '' --disabled-password \"$username\""
-  local configs="echo '$username:$password' | chpasswd; usermod -aG sudo \"$username\""
+  local actions="run_action_add_user_with_sudo_privileges"
+  local postActions=""
 
-  execute_task "$prereq" "$name" "$actions" "$configs"
-
-  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$configs"; then
+  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
     log_error "User creation failed."
     return 1
   fi
 
-  # Save the credentials to a file
-  echo "Username: $username" > /tmp/user_credentials.txt
-  echo "Password: $password" >> /tmp/user_credentials.txt
-
   log_info "User $username has been successfully created."
+  
+  unset username
+
   return 0
+}
+
+### Run action - add user with sudo privileges
+#
+# Function..........: run_action_add_user_with_sudo_privileges
+# Description.......: This function creates a new user account on a Debian-based system 
+#                     and adds it to the 'sudo' group, granting administrative privileges. 
+#                     It prompts the user for a username and password, encrypts the password, 
+#                     and then creates the account with the encrypted password.
+# Parameters........: None. Username and password are provided interactively.
+# Output............: User and password creation messages and any errors encountered 
+#                     during the process.
+# Note..............: This function depends on the 'perl' package for password encryption.
+#                     Ensure 'perl' is installed or modify the function to use a different 
+#                     method for password encryption.
+#
+###
+run_action_add_user_with_sudo_privileges() {
+  # Ask for username approval and capture the returned username
+  username=$(ask_for_username_approval)
+
+  # Set your own password
+  read -sp "Enter a new password for the user: " password
+  echo # Move to a new line
+
+  # Encrypt the password
+  local encrypted_password=$(perl -e 'print crypt($ARGV[0], "password")' "$password")
+
+  # Use the useradd command to create the user with the encrypted password
+  sudo useradd -m -p "$encrypted_password" "$username"
+
+  # Add the user to the sudo group
+  sudo usermod -aG sudo "$username"
 }
 
 ### Check Prerequisites for Adding User with Sudo Privileges
@@ -58,16 +82,14 @@ task_add_user_with_sudo_privileges() {
 ###
 check_prerequisites_add_user_with_sudo_privileges() {
 
-  if ! command -v apt-get install -y jq &> /dev/null; then
-    log_error "."
+  # install jq package
+  if ! install_package "jq"; then
     return 1
-  else
-    log_info "jq is already installed."
-    return 0
   fi
 
   return 0
 }
+
 
 ### Ask for Username Approval
 #

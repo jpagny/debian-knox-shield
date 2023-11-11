@@ -99,12 +99,12 @@ log_action() {
 
 ### Config log function
 #
-# Function..........: log_configuration
-# Description.......: Logs a configuration message with light pink color.
+# Function..........: log_log_post_actionsconfiguration
+# Description.......: Logs a post actions message with light pink color.
 # Parameters........: 
 #              - $1: Message to log.
 #
 ###
-log_configuration() {
-  echo -e "${LOG_COLOR_CONFIG}[CONFIG]: $1${LOG_COLOR_END}" >&2
+log_post_actions() {
+  echo -e "${LOG_COLOR_CONFIG}[POST ACTIONS]: $1${LOG_COLOR_END}" >&2
 }

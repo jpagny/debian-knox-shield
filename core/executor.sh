@@ -13,7 +13,7 @@ source "logger.sh"
 #
 ###
 execute_scripts_in_directory() {
-
+    
     local directory_path="$1"
     local directory_name="$(basename "$directory_path")"
 
@@ -25,10 +25,16 @@ execute_scripts_in_directory() {
 
         if [[ -x "$script" ]]; then
             log_info "Running $relative_script_path..."
-            "$script" || log_error "Failed to execute $relative_script_path."
+            if ! "$script"; then
+                log_error "Failed to execute $relative_script_path."
+                return 1  # Stop the loop on failure
+            fi
         else
             log_error "$relative_script_path is not executable or not found."
+            return 1  # Stop the loop on failure
         fi
 
     done
+
+    log_info "All scripts in $directory_name executed successfully."
 }
