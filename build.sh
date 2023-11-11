@@ -4,7 +4,7 @@
 CORE_DIR="./core"
 BASE_DIR="./base"
 CUSTOM_DIR="./custom"
-TARGET_SCRIPT="script.sh"
+TARGET_SCRIPT="secure-post-install-debian.sh"
 
 # Remove the existing script.sh if it exists
 if [[ -f "$TARGET_SCRIPT" ]]; then
@@ -14,7 +14,7 @@ fi
 
 # Function to append scripts from a directory and its subdirectories to the target script
 append_scripts_from_directory() {
-  
+
   local directory="$1"
 
   # Find all shell scripts in the directory and its subdirectories
@@ -22,7 +22,7 @@ append_scripts_from_directory() {
 
     local script_name=$(basename "$script")
 
-    if [ "$script_name" != "executor.sh" ]; then
+    if ! echo "$script_name" | grep -qE "^(executor\.sh|option\.sh)$"; then
 
       echo "Appending $script_name to $TARGET_SCRIPT..."
 

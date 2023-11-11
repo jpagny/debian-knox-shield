@@ -4,8 +4,6 @@
 source "$(dirname "$0")/../core/execute_task.sh"
 source "$(dirname "$0")/../core/logger.sh"
 
-local username
-
 ### Task add user with sudo privileges
 #
 # Function..........: add_user_with_sudo_privileges
@@ -42,32 +40,21 @@ task_add_user_with_sudo_privileges() {
 # Function..........: run_action_add_user_with_sudo_privileges
 # Description.......: This function creates a new user account on a Debian-based system 
 #                     and adds it to the 'sudo' group, granting administrative privileges. 
-#                     It prompts the user for a username and password, encrypts the password, 
-#                     and then creates the account with the encrypted password.
+#                     It prompts the user for a username and password, and then creates the account.
 # Parameters........: None. Username and password are provided interactively.
 # Output............: User and password creation messages and any errors encountered 
 #                     during the process.
-# Note..............: This function depends on the 'perl' package for password encryption.
-#                     Ensure 'perl' is installed or modify the function to use a different 
-#                     method for password encryption.
 #
 ###
 run_action_add_user_with_sudo_privileges() {
   # Ask for username approval and capture the returned username
   username=$(ask_for_username_approval)
 
-  # Set your own password
-  read -sp "Enter a new password for the user: " password
-  echo # Move to a new line
-
-  # Encrypt the password
-  local encrypted_password=$(perl -e 'print crypt($ARGV[0], "password")' "$password")
-
   # Use the useradd command to create the user with the encrypted password
-  sudo useradd -m -p "$encrypted_password" "$username"
+  adduser --gecos "" "$username" 
 
   # Add the user to the sudo group
-  sudo usermod -aG sudo "$username"
+  usermod -aG sudo "$username"
 }
 
 ### Check Prerequisites for Adding User with Sudo Privileges

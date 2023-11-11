@@ -18,7 +18,7 @@ task_update_and_upgrade() {
     local name="System update && upgrade"
     local isRootRequired=true
     local prereq=""
-    local actions="apt-get update && apt-get upgrade -y &> /dev/null" 
+    local actions="apt-get update &> /dev/null && apt-get upgrade -y &> /dev/null" 
     local postActions=""
 
     if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
