@@ -7,6 +7,11 @@ source "01_logger.sh"
 # Task status file
 STATUS_FILE="task_status.txt"
 
+# Create STATUS_FILE if it doesn't exist
+if [ ! -f "$STATUS_FILE" ]; then
+    touch "$STATUS_FILE"
+fi
+
 ### Execute Task
 #
 # Function..........: execute_task
