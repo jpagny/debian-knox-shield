@@ -25,7 +25,8 @@ append_scripts_from_directory() {
   # Find all shell scripts in the directory and its subdirectories
   find "$directory" -type f -name "*.sh" | while read -r script; do
 
-    local script_name=$(basename "$script")
+    local script_name
+    script_name=$(basename "$script")
 
     echo -e "#-------------- $script_name" >> "$target_script"
     echo "Appending $script_name to $target_script..."
@@ -70,21 +71,20 @@ append_scripts_from_config() {
       echo -e "\n#-------------- $script_name - $script_type" >> "$target_script"
 
       # Append the script contents while replacing 'local task_type=""' with 'local task_type="$script_type"'
-      sed '/^#!/d;/^# import/d;/^\s*source.*\(variable_global.sh\|execute_task.sh\|logger.sh\|utils.sh\)/d; s/local task_type=""/local task_type="'$script_type'"/' "$script_path" >> "$target_script"
+      sed '/^#!/d;/^# import/d;/^\s*source.*\(variable_global.sh\|execute_task.sh\|logger.sh\|utils.sh\)/d; s/local task_type=""/local task_type="'"$script_type"'"/' "$script_path" >> "$target_script"
     else
       echo "Script not found: $script_path"
     fi
   done < "$path_config_file"
 }
 
-######################################## RUN ########################################
+######################################## RUN 
 
 # Define the core and base directories
 CORE_DIR="./core"
 CONFIG_DIR="./config"
 TASK_DIR="./task"
 OUTPUT_DIR="./output"
-STATUS_FILE=""
 
 # Define the Command Line Arguments
 CONFIG_FILE=""

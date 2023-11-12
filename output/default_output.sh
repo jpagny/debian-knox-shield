@@ -171,6 +171,7 @@ log_post_actions() {
 
 #-------------- 02_execute_task.sh
 
+# shellcheck source=/dev/null
 
 # Task status file
 STATUS_FILE="task_status.txt"
@@ -206,19 +207,19 @@ execute_task() {
   local actions="$4"
   local postActions="$5"
 
-  log_task "$name"
+  log_task "$task_name"
 
   # 01 - Check if Task Previously Succeeded
   if check_task_failed_previously "$task_name"; then
     echo "La tâche $task_name a déjà réussi précédemment. Elle est sautée."
-    return $OK
+    return "$OK"
   fi
 
   # 02 - Check for root privileges if required
   if [[ "$require_root" == "true" ]]; then
     if ! verify_has_root_privileges; then
       log_error "Root privileges required for $task_name."
-      return $NOK
+      return "$NOK"
     fi
   fi
 
@@ -231,7 +232,7 @@ execute_task() {
       log_info "Prerequisites completed"
     else
       log_error "Prerequisites failed"
-      return $NOK  # Stop the procedure if the prerequisite fails
+      return "$NOK"  # Stop the procedure if the prerequisite fails
     fi  
 
   fi
@@ -243,7 +244,7 @@ execute_task() {
     log_info "Actions completed"
   else
     log_error "Actions failed"
-    return $NOK  # Optionally stop also if actions fail
+    return "$NOK"  # Optionally stop also if actions fail
   fi
 
   # 05 - Execute the post action
@@ -253,7 +254,7 @@ execute_task() {
 
       if ! eval "$postActions"; then
           log_error "Post actions failed"
-          return $NOK  # Stop the script if post actions fails
+          return "$NOK"  # Stop the script if post actions fails
       else
           log_info "Post actions completed successfully"
       fi
@@ -293,10 +294,10 @@ execute_and_check() {
   local postActions="$5"
   local task_type="$6" 
 
-  execute_task "$task_name" $require_root "$prereq" "$actions" "$postActions"
+  execute_task "$task_name" "$require_root" "$prereq" "$actions" "$postActions"
   local status=$?
 
-  if [$status -ne $OK ]; then
+  if [ $status -ne "$OK" ]; then
 
     mark_task_ko "$task_name"
 
@@ -320,7 +321,7 @@ execute_and_check() {
 
   fi
 
-  return $OK
+  return "$OK"
 }
 
 
@@ -344,7 +345,7 @@ check_task_failed_previously() {
         grep -q "^$task_name:ok$" "$STATUS_FILE"
         return $?
     fi
-    return $NOK
+    return "$NOK"
 }
 
 ### Mark Task as Successful
@@ -395,6 +396,7 @@ mark_task_ko() {
 
 #-------------- 03_utils.sh
 
+# shellcheck source=/dev/null
 
 ### Verify has root privlieges
 #
@@ -409,10 +411,10 @@ mark_task_ko() {
 verify_has_root_privileges() {
     if [[ $(id -u) -ne 0 ]]; then
         log_error "This script must be run with root privileges."
-        return $NOK
+        return "$NOK"
     fi
 
-    return $OK
+    return "$OK"
 }
 
 ### Install Package
@@ -440,22 +442,22 @@ install_package(){
   # Check if APT is available
   if ! command -v apt-get &> /dev/null; then
     log_error "APT package manager not found. This script is intended for Debian-based systems."
-    return $NOK
+    return "$NOK"
   fi
 
-  if ! command -v $package &> /dev/null; then
+  if ! command -v "$package" &> /dev/null; then
     log_info "$package is not installed. Installing..."
 
-    if apt-get update &> /dev/null && apt-get install -y $package &> /dev/null; then
+    if apt-get update &> /dev/null && apt-get install -y "$package" &> /dev/null; then
       log_info "$package has been installed successfully."
-      return $OK
+      return "$OK"
     else
       log_error "Failed to install $package."
-      return $NOK
+      return "$NOK"
     fi
   else
     log_info "$package is already installed."
-    return $OK
+    return "$OK"
   fi
 }
 
@@ -488,28 +490,23 @@ done
 
 #-------------- system/update_and_upgrade.sh - mandatory
 
+# shellcheck source=/dev/null
 
-### Execute and Check Task
+### Update and Upgrade System Task
 #
-# Function..........: execute_and_check
-# Description.......: Executes a specified task and checks its completion status. It marks the task as failed 
-#                     using 'mark_task_ko' if it does not complete successfully. If the task is marked as 
-#                     'mandatory' and fails, the script terminates with an error message. If the task is marked 
-#                     as 'optional' and fails, a warning is logged, and the script continues with a non-zero status.
-# Parameters........: 
-#               - $1: Task name.
-#               - $2: Root requirement (true/false).
-#               - $3: Prerequisites command or function.
-#               - $4: Actions to perform in the task.
-#               - $5: Post-actions to perform after the main actions.
-#               - $6: Task type ('mandatory' or 'optional').
+# Function..........: task_update_and_upgrade
+# Description.......: Executes the system update and upgrade process. This function updates the package 
+#                     lists and then performs an upgrade of all installed packages. The task requires root 
+#                     privileges to execute and can be set as either mandatory or optional.
+# Parameters........: None directly. The parameters such as task name, root requirement, actions, and task type 
+#                     are predefined within the function.
 # Returns...........: 
-#               - 0 (OK): If the task is successfully completed.
-#               - 1 (NOK): If the task fails and is 'optional'.
-#               - Exits the script: If the task fails and is 'mandatory'.
-# Usage.............: This function should be used to execute tasks with a specific requirement on the outcome. 
-#                     Use 'mandatory' for critical tasks whose failure should stop the script, and 'optional' for 
-#                     tasks where failure does not impede the continuation of the script.
+#               - 0 (OK): If the system update and upgrade complete successfully.
+#               - 1 (NOK): If the update and upgrade process fails.
+# Usage.............: This function is designed to be a part of a larger script or system setup routine. It should 
+#                     be called when it's necessary to ensure the system is up-to-date.
+# 
+# Example...........: `task_update_and_upgrade` to execute the system update and upgrade.
 #
 ###
 task_update_and_upgrade() {
@@ -523,17 +520,18 @@ task_update_and_upgrade() {
 
     if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
         log_error "System upgrade failed."
-        return $NOK
+        return "$NOK"
     fi
 
     log_info "System update and upgrade completed successfully."
-    return $OK
+    return "$OK"
 }
 
 # Run the update and upgrade function
 task_update_and_upgrade
 #-------------- user/add_user_sudo.sh - mandatory
 
+# shellcheck source=/dev/null
 
 ### Task add user with sudo privileges
 #
@@ -558,14 +556,14 @@ task_add_user_with_sudo_privileges() {
 
   if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
-    return $NOK
+    return "$NOK"
   fi
 
   log_info "User $username has been successfully created."
   
   unset username
 
-  return $OK
+  return "$OK"
 }
 
 ### Run action - add user with sudo privileges
@@ -604,15 +602,15 @@ check_prerequisites_add_user_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "sudo"; then
-    return $NOK
+    return "$NOK"
   fi
 
   # install jq package
   if ! install_package "jq"; then
-    return $NOK
+    return "$NOK"
   fi
 
-  return $OK
+  return "$OK"
 }
 
 
@@ -646,7 +644,7 @@ ask_for_username_approval() {
 
     log_debug "Generated username: $username"
 
-    read -p "Do you like this username : $username ? (y/n): " approval
+    read -r -p "Do you like this username : $username ? (y/n): " approval
     
     if [ "$approval" != "y" ]; then
       log_debug "Fetching a new username..."

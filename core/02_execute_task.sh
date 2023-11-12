@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # import
+# shellcheck source=/dev/null
 source "00_variable_global.sh"
 source "01_logger.sh"
 
@@ -38,19 +39,19 @@ execute_task() {
   local actions="$4"
   local postActions="$5"
 
-  log_task "$name"
+  log_task "$task_name"
 
   # 01 - Check if Task Previously Succeeded
   if check_task_failed_previously "$task_name"; then
     echo "La tâche $task_name a déjà réussi précédemment. Elle est sautée."
-    return $OK
+    return "$OK"
   fi
 
   # 02 - Check for root privileges if required
   if [[ "$require_root" == "true" ]]; then
     if ! verify_has_root_privileges; then
       log_error "Root privileges required for $task_name."
-      return $NOK
+      return "$NOK"
     fi
   fi
 
@@ -63,7 +64,7 @@ execute_task() {
       log_info "Prerequisites completed"
     else
       log_error "Prerequisites failed"
-      return $NOK  # Stop the procedure if the prerequisite fails
+      return "$NOK"  # Stop the procedure if the prerequisite fails
     fi  
 
   fi
@@ -75,7 +76,7 @@ execute_task() {
     log_info "Actions completed"
   else
     log_error "Actions failed"
-    return $NOK  # Optionally stop also if actions fail
+    return "$NOK"  # Optionally stop also if actions fail
   fi
 
   # 05 - Execute the post action
@@ -85,7 +86,7 @@ execute_task() {
 
       if ! eval "$postActions"; then
           log_error "Post actions failed"
-          return $NOK  # Stop the script if post actions fails
+          return "$NOK"  # Stop the script if post actions fails
       else
           log_info "Post actions completed successfully"
       fi
@@ -125,10 +126,10 @@ execute_and_check() {
   local postActions="$5"
   local task_type="$6" 
 
-  execute_task "$task_name" $require_root "$prereq" "$actions" "$postActions"
+  execute_task "$task_name" "$require_root" "$prereq" "$actions" "$postActions"
   local status=$?
 
-  if [$status -ne $OK ]; then
+  if [ $status -ne "$OK" ]; then
 
     mark_task_ko "$task_name"
 
@@ -152,7 +153,7 @@ execute_and_check() {
 
   fi
 
-  return $OK
+  return "$OK"
 }
 
 
@@ -176,7 +177,7 @@ check_task_failed_previously() {
         grep -q "^$task_name:ok$" "$STATUS_FILE"
         return $?
     fi
-    return $NOK
+    return "$NOK"
 }
 
 ### Mark Task as Successful

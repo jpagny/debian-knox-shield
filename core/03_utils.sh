@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # import
+# shellcheck source=/dev/null
 source "00_variable_global.sh"
 source "01_logger.sh"
 
@@ -17,10 +18,10 @@ source "01_logger.sh"
 verify_has_root_privileges() {
     if [[ $(id -u) -ne 0 ]]; then
         log_error "This script must be run with root privileges."
-        return $NOK
+        return "$NOK"
     fi
 
-    return $OK
+    return "$OK"
 }
 
 ### Install Package
@@ -48,21 +49,21 @@ install_package(){
   # Check if APT is available
   if ! command -v apt-get &> /dev/null; then
     log_error "APT package manager not found. This script is intended for Debian-based systems."
-    return $NOK
+    return "$NOK"
   fi
 
-  if ! command -v $package &> /dev/null; then
+  if ! command -v "$package" &> /dev/null; then
     log_info "$package is not installed. Installing..."
 
-    if apt-get update &> /dev/null && apt-get install -y $package &> /dev/null; then
+    if apt-get update &> /dev/null && apt-get install -y "$package" &> /dev/null; then
       log_info "$package has been installed successfully."
-      return $OK
+      return "$OK"
     else
       log_error "Failed to install $package."
-      return $NOK
+      return "$NOK"
     fi
   else
     log_info "$package is already installed."
-    return $OK
+    return "$OK"
   fi
 }

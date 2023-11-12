@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # import
+# shellcheck source=/dev/null
 source "$(dirname "$0")/../core/00_variable_global.sh"
 source "$(dirname "$0")/../core/01_logger.sh"
 source "$(dirname "$0")/../core/02_execute_task.sh"
@@ -34,11 +35,11 @@ task_update_and_upgrade() {
 
     if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
         log_error "System upgrade failed."
-        return $NOK
+        return "$NOK"
     fi
 
     log_info "System update and upgrade completed successfully."
-    return $OK
+    return "$OK"
 }
 
 # Run the update and upgrade function

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # import
+# shellcheck source=/dev/null
 source "$(dirname "$0")/../core/00_variable_global.sh"
 source "$(dirname "$0")/../core/01_logger.sh"
 source "$(dirname "$0")/../core/02_execute_task.sh"
@@ -29,14 +30,14 @@ task_add_user_with_sudo_privileges() {
 
   if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
-    return $NOK
+    return "$NOK"
   fi
 
   log_info "User $username has been successfully created."
   
   unset username
 
-  return $OK
+  return "$OK"
 }
 
 ### Run action - add user with sudo privileges
@@ -75,15 +76,15 @@ check_prerequisites_add_user_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "sudo"; then
-    return $NOK
+    return "$NOK"
   fi
 
   # install jq package
   if ! install_package "jq"; then
-    return $NOK
+    return "$NOK"
   fi
 
-  return $OK
+  return "$OK"
 }
 
 
@@ -117,7 +118,7 @@ ask_for_username_approval() {
 
     log_debug "Generated username: $username"
 
-    read -p "Do you like this username : $username ? (y/n): " approval
+    read -r -p "Do you like this username : $username ? (y/n): " approval
     
     if [ "$approval" != "y" ]; then
       log_debug "Fetching a new username..."
