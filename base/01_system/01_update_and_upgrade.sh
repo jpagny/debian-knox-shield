@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # import
-source "$(dirname "$0")/../core/logger.sh"
-source "$(dirname "$0")/../core/execute_task.sh"
+source "$(dirname "$0")/../core/00_variable_global.sh"
+source "$(dirname "$0")/../core/01_logger.sh"
+source "$(dirname "$0")/../core/02_execute_task.sh"
+source "$(dirname "$0")/../core/03_utils.sh"
 
 ### Task - system update && upgrade
 #
@@ -23,11 +25,11 @@ task_update_and_upgrade() {
 
     if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
         log_error "System upgrade failed."
-        return 1
+        return $NOK
     fi
 
     log_info "System update and upgrade completed successfully."
-    return 0
+    return $OK
 }
 
 # Run the update and upgrade function

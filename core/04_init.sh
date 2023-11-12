@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Debug mode
+DEBUG_MODE=0
+
 ### Parse Arguments for Debug Mode
 #
 # Description.......: Parses script arguments to check if debug mode should be enabled.
@@ -21,3 +24,8 @@ for arg in "$@"; do
   fi
 
 done
+
+# Create STATUS_FILE if it doesn't exist
+if [ ! -f "$STATUS_FILE" ]; then
+    touch "$STATUS_FILE"
+fi

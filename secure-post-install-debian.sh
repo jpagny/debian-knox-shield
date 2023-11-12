@@ -1,7 +1,10 @@
 #!/bin/bash
+#-------------- 00_variable_global.sh
 
-DEBUG_MODE=0
+OK=0
+NOK=1
 
+#-------------- 01_logger.sh
 
 # Define log level colors
 LOG_COLOR_DEBUG='\033[0;36m'        # Cyan for debug
@@ -16,12 +19,17 @@ LOG_COLOR_POST_ACTION='\033[1;33m'  # Yellow for post action
 
 LOG_COLOR_END='\033[0m'             # End color
 
-### Debug log
+### Log Debug Message
 #
 # Function..........: log_debug
-# Description.......: Logs a debug message with cyan color.
+# Description.......: Logs a debug message if the DEBUG_MODE is enabled. The message is 
+#                     printed in the color specified by LOG_COLOR_DEBUG. The function is 
+#                     intended for use in scripts where conditional logging based on a debug 
+#                     mode is required.
 # Parameters........: 
-#               - $1: Message to log.
+#               - $1: The debug message to be logged.
+# Side Effects......: Outputs a message to standard error (stderr) if DEBUG_MODE is set to 1.
+#                     The message is colored based on the LOG_COLOR_DEBUG variable.
 #
 ###
 log_debug() {
@@ -30,84 +38,126 @@ log_debug() {
   fi
 }
 
-### Information log
+### Log Information Message
 #
 # Function..........: log_info
-# Description.......: Logs an informational message with green color.
+# Description.......: Outputs an information message, prefixed with '[info]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_INFO. This function 
+#                     is used for general informational logging within the script.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The informational message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and an '[info]' prefix.
 #
 ###
 log_info() {
   echo -e "${LOG_COLOR_INFO}    [info]: $1${LOG_COLOR_END}" >&2
 }
 
-### Warning log
+### Log Warning Message
 #
 # Function..........: log_warn
-# Description.......: Logs a warning message with yellow color.
+# Description.......: Outputs a warning message, prefixed with '[warn]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_WARN. This function 
+#                     is used for logging warnings within the script, indicating potential 
+#                     issues or important notices that are not critical errors.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The warning message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and a '[warn]' prefix. The output is intended to draw 
+#                     attention to potential issues or important information.
 #
 ###
 log_warn() {
   echo -e "${LOG_COLOR_WARN}    [warn]: $1${LOG_COLOR_END}" >&2
 }
 
-### Error log
+### Log Error Message
 #
 # Function..........: log_error
-# Description.......: Logs an error message with red color.
+# Description.......: Outputs an error message, prefixed with '[error]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_ERROR. This function 
+#                     is used for logging error messages within the script, indicating 
+#                     issues or problems that need immediate attention or that have caused 
+#                     a failure in the script's execution.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The error message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and an '[error]' prefix. The output is intended to 
+#                     highlight errors or critical problems in the script.
 #
 ###
 log_error() {
   echo -e "${LOG_COLOR_ERROR}     [error]: $1${LOG_COLOR_END}" >&2
 }
 
-### Task log
+### Log Task Message
 #
 # Function..........: log_task
-# Description.......: Logs a task message with magenta color.
+# Description.......: Outputs a task message, prefixed with '[TASK]'. The message is 
+#                     displayed in the color specified by LOG_COLOR_TASK. This function is 
+#                     used for logging task-related messages within the script, providing a 
+#                     clear indication of task executions or updates.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The task message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and a '[TASK]' prefix. The output is intended to 
+#                     highlight task-related activities or statuses in the script.
 #
 ###
 log_task() {
   echo -e "${LOG_COLOR_TASK}[TASK]: $1${LOG_COLOR_END}" >&2
 }
 
-### Prerequisite log
+### Log Prerequisite Message
 #
 # Function..........: log_prerequisite
-# Description.......: Logs a prerequisite message with yellow color.
+# Description.......: Outputs a prerequisite message, prefixed with '[PREREQUISITE]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_PREREQUISITE. This function 
+#                     is used for logging messages related to prerequisites within the script, 
+#                     highlighting essential setup steps or requirements.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The prerequisite message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and a '[PREREQUISITE]' prefix. The output is intended to 
+#                     emphasize prerequisites or initial setup requirements in the script.
 #
 ###
 log_prerequisite() {
   echo -e "${LOG_COLOR_PREREQUISITE}  [PREREQUISITE]: $1${LOG_COLOR_END}" >&2
 }
 
-### Action log
+### Log Action Message
 #
 # Function..........: log_action
-# Description.......: Logs an action message with yellow color.
+# Description.......: Outputs an action message, prefixed with '[ACTION]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_ACTION. This function 
+#                     is used for logging messages related to specific actions taken or 
+#                     to be taken within the script, aiding in tracking the script's operations.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The action message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and an '[ACTION]' prefix. The output is intended to 
+#                     highlight significant actions or steps in the script's execution.
 #
 ###
 log_action() {
   echo -e "${LOG_COLOR_ACTION}  [ACTION]: $1${LOG_COLOR_END}" >&2
 }
 
-### Post action log
+### Log Post Action Message
 #
-# Function..........: log_log_post_actionsconfiguration
-# Description.......: Logs a post actions message with yellow color.
+# Function..........: log_post_actions
+# Description.......: Outputs a post-action message, prefixed with '[POST ACTIONS]'. The message 
+#                     is displayed in the color specified by LOG_COLOR_POST_ACTION. This function 
+#                     is used for logging messages related to actions taken after the main 
+#                     processing of the script, such as cleanup steps, summaries, or final status 
+#                     updates.
 # Parameters........: 
-#              - $1: Message to log.
+#               - $1: The post-action message to be logged.
+# Side Effects......: Outputs the provided message to standard error (stderr), formatted 
+#                     with a color and a '[POST ACTIONS]' prefix. The output is intended to 
+#                     highlight actions or steps taken after the main execution of the script.
 #
 ###
 log_post_actions() {
@@ -115,29 +165,172 @@ log_post_actions() {
 }
 
 
+#-------------- 02_execute_task.sh
 
-### Parse Arguments for Debug Mode
+
+# Task status file
+STATUS_FILE="task_status.txt"
+
+### Execute Task
 #
-# Description.......: Parses script arguments to check if debug mode should be enabled.
-#                     Sets the DEBUG_MODE variable to 1 if '--debug' is found among the arguments.
-#                     This affects the behavior of functions that depend on the DEBUG_MODE 
-#                     setting, enabling additional logging or verbose output.
+# Function..........: execute_task
+# Description.......: Executes a specified task within the script. It checks if the task 
+#                     has been previously completed, requires root privileges, executes 
+#                     prerequisites, main actions, and post-actions. It logs each step 
+#                     and marks the task as successful or failed in the STATUS_FILE.
 # Parameters........: 
-#               - $@: All arguments passed to the script.
-# Effects...........: Modifies the global DEBUG_MODE variable.
-# Note..............: Place this code at the beginning of the script or before any functions 
-#                     that depend on the DEBUG_MODE setting are called.
+#               - $1: Task name (task_name) - the identifier for the task.
+#               - $2: Require root (require_root) - specifies if the task requires root privileges.
+#               - $3: Prerequisites (prereq) - commands or functions to be executed as prerequisites.
+#               - $4: Actions (actions) - the main actions of the task.
+#               - $5: Post-actions (postActions) - commands or functions to be executed after the main actions.
+# Returns...........: 
+#               - 0: If the task is skipped or completed successfully.
+#               - 1: If any step (prerequisite, action, post-action) fails or if root privileges are missing.
 #
 ###
-for arg in "$@"; do
+execute_task() {
 
-  if [ "$arg" = "--debug" ]; then
-    DEBUG_MODE=1
-    break
+  local task_name="$1"
+  local require_root="$2"
+  local prereq="$3"
+  local actions="$4"
+  local postActions="$5"
+
+  log_task "$name"
+
+  # 01 - Check if Task Previously Succeeded
+  if check_task_failed_previously "$task_name"; then
+    echo "La tâche $task_name a déjà réussi précédemment. Elle est sautée."
+    return $OK
   fi
 
-done
+  # 02 - Check for root privileges if required
+  if [[ "$require_root" == "true" ]]; then
+    if ! verify_has_root_privileges; then
+      log_error "Root privileges required for $task_name."
+      mark_task_ko "$task_name"
+      return $NOK
+    fi
+  fi
 
+  # 03 - Execute the prerequisite if provided
+  if [ -n "$prereq" ]; then
+
+    log_prerequisite "Executing prerequisites for $task_name..."
+    
+    if eval "$prereq"; then
+      log_info "Prerequisites completed"
+    else
+      log_error "Prerequisites failed"
+      mark_task_ko "$task_name"
+      return $NOK  # Stop the procedure if the prerequisite fails
+    fi  
+
+  fi
+
+  # 04 - Execute the actions
+  log_action "Executing actions for $task_name..."
+
+  if eval "$actions"; then
+    log_info "Actions completed"
+  else
+    log_error "Actions failed"
+    mark_task_ko "$task_name"
+    return $NOK  # Optionally stop also if actions fail
+  fi
+
+  # 05 - Execute the post action
+  if [ -n "$postActions" ]; then  # Check if 'postActions' variable is not empty
+
+      log_post_actions "Executing post actions for $task_name..."
+
+      if ! eval "$postActions"; then
+          log_error "Post actions failed"
+          mark_task_ko "$task_name"
+          return $NOK  # Stop the script if post actions fails
+      else
+          log_info "Post actions completed successfully"
+      fi
+
+  fi
+
+  # 06 - Mark Task as Successfully Completed
+  mark_task_ok "$task_name"
+
+  log_info "Task $task_name execution completed successfully"
+}
+
+### Check if Task Failed Previously
+#
+# Function..........: check_task_failed_previously
+# Description.......: Checks if a given task has failed in previous runs by looking into the 
+#                     STATUS_FILE. It searches for an entry with the format 'taskname:ok'. 
+#                     If such an entry is found, it means the task was successful in a 
+#                     previous run.
+# Parameters........: 
+#               - $1: The name of the task to check.
+# Returns...........: 
+#               - 0: If the task was successful in a previous run (entry 'taskname:ok' found).
+#               - 1: If the task was not successful in a previous run or if STATUS_FILE 
+#                    does not exist.
+###
+check_task_failed_previously() {
+    local task_name=$1
+    if [ -f "$STATUS_FILE" ]; then
+        grep -q "^$task_name:ok$" "$STATUS_FILE"
+        return $?
+    fi
+    return $NOK
+}
+
+### Mark Task as Successful
+#
+# Function..........: mark_task_ok
+# Description.......: Marks a specified task as successful ('ok') in the STATUS_FILE. 
+#                     If an entry for the task with a 'ko' status exists, it updates 
+#                     the entry to 'ok'. If no such entry exists, it adds a new 'ok' 
+#                     status entry for the task.
+# Parameters........: 
+#               - $1: The name of the task to be marked as successful.
+# Returns...........: None.
+# Side Effects......: Modifies the STATUS_FILE by updating or adding the status of the task.
+#                     If the task had a 'ko' status, it is changed to 'ok'. If the task was 
+#                     not previously listed, it is added with an 'ok' status.
+###
+mark_task_ok() {
+  
+    local task_name=$1
+
+    if grep -q "^$task_name:ko$" "$STATUS_FILE"; then
+      sed -i "/^$task_name:ko$/c\\$task_name:ok" "$STATUS_FILE"
+    else
+      echo "$task_name:ok" >> "$STATUS_FILE"
+    fi
+}
+
+### Mark Task as Failed
+#
+# Function..........: mark_task_ko
+# Description.......: Marks a specified task as failed ('ko') in the STATUS_FILE.
+#                     Adds a new 'ko' status entry for the task. This function does not 
+#                     check for existing entries of the task, it simply appends the failed 
+#                     status to the file. 
+# Parameters........: 
+#               - $1: The name of the task to be marked as failed.
+# Returns...........: None.
+# Side Effects......: Modifies the STATUS_FILE by appending the status of the task.
+#                     If the task was previously marked as successful ('ok') or failed ('ko'), 
+#                     this function adds an additional 'ko' entry without modifying or 
+#                     removing the existing entries.
+###
+mark_task_ko() {
+    local task_name=$1
+    echo "$task_name:ko" >> "$STATUS_FILE"
+}
+
+
+#-------------- 03_utils.sh
 
 
 ### Verify has root privlieges
@@ -153,10 +346,10 @@ done
 verify_has_root_privileges() {
     if [[ $(id -u) -ne 0 ]]; then
         log_error "This script must be run with root privileges."
-        return 1
+        return $NOK
     fi
 
-    return 0
+    return $OK
 }
 
 ### Install Package
@@ -186,93 +379,52 @@ install_package(){
 
     if apt-get update &> /dev/null && apt-get install -y $package &> /dev/null; then
       log_info "$package has been installed successfully."
-      return 0
+      return $OK
     else
       log_error "Failed to install $package."
-      return 1
+      return $NOK
     fi
   else
     log_info "$package is already installed."
-    return 0
+    return $OK
   fi
 }
 
-### Execute Task
+
+#-------------- 04_init.sh
+
+# Debug mode
+DEBUG_MODE=0
+
+### Parse Arguments for Debug Mode
 #
-# Function..........: execute_task
-# Description.......: Executes a task with optional prerequisites and post actions. Validates each step and handles errors.
+# Description.......: Parses script arguments to check if debug mode should be enabled.
+#                     Sets the DEBUG_MODE variable to 1 if '--debug' is found among the arguments.
+#                     This affects the behavior of functions that depend on the DEBUG_MODE 
+#                     setting, enabling additional logging or verbose output.
 # Parameters........: 
-#              - $1: Name of the task.
-#              - $2: Boolean indicating if root privileges are required.
-#              - $3: Command string for prerequisites.
-#              - $4: Command string for the main actions.
-#              - $5: Command string for post actions.
-# Returns...........: 
-#              - 0: If all steps are successfully executed.
-#              - 1: If any step fails.
-# Output............: Logs the progress and results of each step.
+#               - $@: All arguments passed to the script.
+# Effects...........: Modifies the global DEBUG_MODE variable.
+# Note..............: Place this code at the beginning of the script or before any functions 
+#                     that depend on the DEBUG_MODE setting are called.
 #
 ###
-execute_task() {
+for arg in "$@"; do
 
-  local name="$1"
-  local require_root="$2"
-  local prereq="$3"
-  local actions="$4"
-  local postActions="$5"
-
-  log_task "$name"
-
-  # 01 - Check for root privileges if required
-  if [[ "$require_root" == "true" ]]; then
-    if ! verify_has_root_privileges; then
-      log_error "Root privileges required for $name."
-      return 1
-    fi
+  if [ "$arg" = "--debug" ]; then
+    DEBUG_MODE=1
+    break
   fi
 
-  # 02 - Execute the prerequisite if provided
-  if [ -n "$prereq" ]; then
+done
 
-    log_prerequisite "Executing prerequisites for $name..."
-    
-    if eval "$prereq"; then
-      log_info "Prerequisites completed"
-    else
-      log_error "Prerequisites failed"
-      return 1  # Stop the procedure if the prerequisite fails
-    fi  
-
-  fi
-
-  # 03 - Execute the actions
-  log_action "Executing actions for $name..."
-
-  if eval "$actions"; then
-    log_info "Actions completed"
-  else
-    log_error "Actions failed"
-    return 1  # Optionally stop also if actions fail
-  fi
-
-  # 04 - Execute the post action
-  if [ -n "$postActions" ]; then  # Check if 'postActions' variable is not empty
-
-      log_post_actions "Executing post actions for $name..."
-
-      if ! eval "$postActions"; then
-          log_error "Post actions failed"
-          return 1  # Stop the script if post actions fails
-      else
-          log_info "Post actions completed successfully"
-      fi
-
-  fi
-
-  log_info "Task $name execution completed successfully"
-}
+# Create STATUS_FILE if it doesn't exist
+if [ ! -f "$STATUS_FILE" ]; then
+    touch "$STATUS_FILE"
+fi
 
 
+#-------------- 01_update_and_upgrade.sh
 
 
 ### Task - system update && upgrade
@@ -294,16 +446,17 @@ task_update_and_upgrade() {
 
     if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
         log_error "System upgrade failed."
-        return 1
+        return $NOK
     fi
 
     log_info "System update and upgrade completed successfully."
-    return 0
+    return $OK
 }
 
 # Run the update and upgrade function
 task_update_and_upgrade
 
+#-------------- 02_install_sudo.sh
 
 
 ### Task - install Sudo
@@ -327,11 +480,11 @@ task_install_sudo() {
   
   if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
     log_error "Installation of sudo failed."
-    return 1
+    return $NOK
   fi
 
   log_info "Sudo has been successfully installed."
-  return 0
+  return $OK
 }
 
 ### Check Prerequisites install sudo
@@ -350,10 +503,10 @@ check_prerequisites_install_sudo() {
   # Check if APT is available
   if ! command -v apt-get &> /dev/null; then
     log_error "APT package manager not found. This script is intended for Debian-based systems."
-    return 1
+    return $NOK
   fi
 
-  return 0
+  return $OK
 }
 
 ### Run action - Install Sudo
@@ -372,15 +525,16 @@ run_action_install_sudo(){
 
   # install sudo package
   if ! install_package "sudo"; then
-    return 1
+    return $NOK
   fi
 
-  return 0
+  return $OK
 }
 
 # Run the install sudo function
 task_install_sudo
 
+#-------------- 03_add_user_sudo.sh
 
 
 ### Task add user with sudo privileges
@@ -404,14 +558,14 @@ task_add_user_with_sudo_privileges() {
 
   if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
     log_error "User creation failed."
-    return 1
+    return $NOK
   fi
 
   log_info "User $username has been successfully created."
   
   unset username
 
-  return 0
+  return $OK
 }
 
 ### Run action - add user with sudo privileges
@@ -450,10 +604,10 @@ check_prerequisites_add_user_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "jq"; then
-    return 1
+    return $NOK
   fi
 
-  return 0
+  return $OK
 }
 
 

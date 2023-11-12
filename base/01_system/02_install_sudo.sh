@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # import
-source "$(dirname "$0")/../core/execute_task.sh"
-source "$(dirname "$0")/../core/logger.sh"
+source "$(dirname "$0")/../core/00_variable_global.sh"
+source "$(dirname "$0")/../core/01_logger.sh"
+source "$(dirname "$0")/../core/02_execute_task.sh"
+source "$(dirname "$0")/../core/03_utils.sh"
 
 ### Task - install Sudo
 #
@@ -25,11 +27,11 @@ task_install_sudo() {
   
   if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
     log_error "Installation of sudo failed."
-    return 1
+    return $NOK
   fi
 
   log_info "Sudo has been successfully installed."
-  return 0
+  return $OK
 }
 
 ### Check Prerequisites install sudo
@@ -48,10 +50,10 @@ check_prerequisites_install_sudo() {
   # Check if APT is available
   if ! command -v apt-get &> /dev/null; then
     log_error "APT package manager not found. This script is intended for Debian-based systems."
-    return 1
+    return $NOK
   fi
 
-  return 0
+  return $OK
 }
 
 ### Run action - Install Sudo
@@ -70,10 +72,10 @@ run_action_install_sudo(){
 
   # install sudo package
   if ! install_package "sudo"; then
-    return 1
+    return $NOK
   fi
 
-  return 0
+  return $OK
 }
 
 # Run the install sudo function

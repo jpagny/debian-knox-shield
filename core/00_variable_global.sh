@@ -1,3 +1,4 @@
 #!/bin/bash
 
-DEBUG_MODE=0
+OK=0
+NOK=1

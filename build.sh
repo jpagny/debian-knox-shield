@@ -6,7 +6,7 @@ BASE_DIR="./base"
 CUSTOM_DIR="./custom"
 TARGET_SCRIPT="secure-post-install-debian.sh"
 
-# Remove the existing script.sh if it exists
+# Remove the existing secure-post-install-debian.sh if it exists
 if [[ -f "$TARGET_SCRIPT" ]]; then
     echo "Removing existing $TARGET_SCRIPT file..."
     rm "$TARGET_SCRIPT"
@@ -22,15 +22,13 @@ append_scripts_from_directory() {
 
     local script_name=$(basename "$script")
 
-    if ! echo "$script_name" | grep -qE "^(executor\.sh|option\.sh)$"; then
+    echo -e "#-------------- $script_name" >> "$TARGET_SCRIPT"
+    echo "Appending $script_name to $TARGET_SCRIPT..."
 
-      echo "Appending $script_name to $TARGET_SCRIPT..."
+    # Append the script contents while excluding shebang and specific source lines
+    sed '/^#!/d;/^# import/d;/^\s*source.*\(variable_global.sh\|execute_task.sh\|logger.sh\|utils.sh\)/d' "$script" >> "$TARGET_SCRIPT"
 
-      # Append the script contents while excluding shebang and specific source lines
-      sed '/^#!/d;/^# import/d;/^\s*source.*\(execute_task.sh\|logger.sh\|utils.sh\)/d' "$script" >> "$TARGET_SCRIPT"
-
-      echo -e "\n" >> "$TARGET_SCRIPT" # Add a newline for separation
-    fi
+    echo -e "\n" >> "$TARGET_SCRIPT" # Add a newline for separation
 
   done
 }
