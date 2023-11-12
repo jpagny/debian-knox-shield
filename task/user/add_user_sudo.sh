@@ -24,8 +24,10 @@ task_add_user_with_sudo_privileges() {
   local prereq="check_prerequisites_add_user_with_sudo_privileges"
   local actions="run_action_add_user_with_sudo_privileges"
   local postActions=""
+  local task_type=""
 
-  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
+
+  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
     return $NOK
   fi
@@ -127,4 +129,4 @@ ask_for_username_approval() {
 }
 
 # Run the function to add a new user with sudo
-task_add_user_with_sudo_privileges
+task_add_user_with_sudo_privileges 

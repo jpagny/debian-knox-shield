@@ -1,63 +1,5 @@
 #!/bin/bash
 
-# Define the core and base directories
-CORE_DIR="./core"
-CONFIG_DIR="./config"
-TASK_DIR="./task"
-OUTPUT_DIR="./output"
-STATUS_FILE=""
-
-# Define the Command Line Arguments
-CONFIG_FILE=""
-OUTPUT_SCRIPT=""
-CAPTURE_NEXT_ARG=""
-
-# Process Command Line Arguments
-for arg in "$@"; do
-
-  if [ "$CAPTURE_NEXT_ARG" = "CONFIG" ]; then
-    CONFIG_FILE="$arg"
-    CAPTURE_NEXT_ARG=""
-
-  elif [ "$CAPTURE_NEXT_ARG" = "OUTPUT" ]; then
-    OUTPUT_SCRIPT="$arg"
-    CAPTURE_NEXT_ARG=""
-
-  elif [ "$arg" = "--config" ]; then
-    CAPTURE_NEXT_ARG="CONFIG"
-
-  elif [ "$arg" = "--output" ]; then
-    CAPTURE_NEXT_ARG="OUTPUT"
-
-  fi
-
-done
-
-# Provide default values if not specified
-CONFIG_FILE=${CONFIG_FILE:-"default_config.txt"}
-OUTPUT_SCRIPT=${OUTPUT_SCRIPT:-"default_output.sh"}
-
-# Remove the existing secure-post-install-debian.sh if it exists
-if [[ -f "$OUTPUT_DIR/$OUTPUT_SCRIPT" ]]; then
-    echo "Removing existing $OUTPUT_DIR/$OUTPUT_SCRIPT file..."
-    rm "$OUTPUT_DIR/$OUTPUT_SCRIPT"
-fi
-
-# Building script 
-echo "#!/bin/bash" >> "$OUTPUT_DIR/$OUTPUT_SCRIPT"
-echo -e "\n" >> "$OUTPUT_DIR/$OUTPUT_SCRIPT"
-
-# Append core scripts
-append_scripts_from_directory "$CORE_DIR" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
-
-# Append task scripts
-append_scripts_from_config "$CONFIG_FILE" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
-
-echo "Build completed. All scripts are combined into $OUTPUT_SCRIPT."
-
-
-####################### Functions #######################
-
 ### Append Scripts from Directory
 #
 # Function..........: append_scripts_from_directory
@@ -127,10 +69,67 @@ append_scripts_from_config() {
       echo "Appending script: $script_name to $target_script"
       echo -e "\n#-------------- $script_name - $script_type" >> "$target_script"
 
-      # Append the script contents while excluding shebang and specific source lines
-      sed '/^#!/d;/^# import/d;/^\s*source.*\(variable_global.sh\|execute_task.sh\|logger.sh\|utils.sh\)/d' "$script_path" >> "$target_script"
+      # Append the script contents while replacing 'local task_type=""' with 'local task_type="$script_type"'
+      sed '/^#!/d;/^# import/d;/^\s*source.*\(variable_global.sh\|execute_task.sh\|logger.sh\|utils.sh\)/d; s/local task_type=""/local task_type="'$script_type'"/' "$script_path" >> "$target_script"
     else
       echo "Script not found: $script_path"
     fi
   done < "$path_config_file"
 }
+
+######################################## RUN ########################################
+
+# Define the core and base directories
+CORE_DIR="./core"
+CONFIG_DIR="./config"
+TASK_DIR="./task"
+OUTPUT_DIR="./output"
+STATUS_FILE=""
+
+# Define the Command Line Arguments
+CONFIG_FILE=""
+OUTPUT_SCRIPT=""
+CAPTURE_NEXT_ARG=""
+
+# Process Command Line Arguments
+for arg in "$@"; do
+
+  if [ "$CAPTURE_NEXT_ARG" = "CONFIG" ]; then
+    CONFIG_FILE="$arg"
+    CAPTURE_NEXT_ARG=""
+
+  elif [ "$CAPTURE_NEXT_ARG" = "OUTPUT" ]; then
+    OUTPUT_SCRIPT="$arg"
+    CAPTURE_NEXT_ARG=""
+
+  elif [ "$arg" = "--config" ]; then
+    CAPTURE_NEXT_ARG="CONFIG"
+
+  elif [ "$arg" = "--output" ]; then
+    CAPTURE_NEXT_ARG="OUTPUT"
+
+  fi
+
+done
+
+# Provide default values if not specified
+CONFIG_FILE=${CONFIG_FILE:-"default_config.txt"}
+OUTPUT_SCRIPT=${OUTPUT_SCRIPT:-"default_output.sh"}
+
+# Remove the existing secure-post-install-debian.sh if it exists
+if [[ -f "$OUTPUT_DIR/$OUTPUT_SCRIPT" ]]; then
+    echo "Removing existing $OUTPUT_DIR/$OUTPUT_SCRIPT file..."
+    rm "$OUTPUT_DIR/$OUTPUT_SCRIPT"
+fi
+
+# Building script 
+echo "#!/bin/bash" >> "$OUTPUT_DIR/$OUTPUT_SCRIPT"
+echo -e "\n" >> "$OUTPUT_DIR/$OUTPUT_SCRIPT"
+
+# Append core scripts
+append_scripts_from_directory "$CORE_DIR" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
+
+# Append task scripts
+append_scripts_from_config "$CONFIG_FILE" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
+
+echo "Build completed. All scripts are combined into $OUTPUT_SCRIPT."

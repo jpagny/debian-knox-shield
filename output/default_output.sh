@@ -218,7 +218,6 @@ execute_task() {
   if [[ "$require_root" == "true" ]]; then
     if ! verify_has_root_privileges; then
       log_error "Root privileges required for $task_name."
-      mark_task_ko "$task_name"
       return $NOK
     fi
   fi
@@ -232,7 +231,6 @@ execute_task() {
       log_info "Prerequisites completed"
     else
       log_error "Prerequisites failed"
-      mark_task_ko "$task_name"
       return $NOK  # Stop the procedure if the prerequisite fails
     fi  
 
@@ -245,7 +243,6 @@ execute_task() {
     log_info "Actions completed"
   else
     log_error "Actions failed"
-    mark_task_ko "$task_name"
     return $NOK  # Optionally stop also if actions fail
   fi
 
@@ -256,7 +253,6 @@ execute_task() {
 
       if ! eval "$postActions"; then
           log_error "Post actions failed"
-          mark_task_ko "$task_name"
           return $NOK  # Stop the script if post actions fails
       else
           log_info "Post actions completed successfully"
@@ -269,6 +265,64 @@ execute_task() {
 
   log_info "Task $task_name execution completed successfully"
 }
+
+### Execute and Check Task
+#
+# Function..........: execute_and_check
+# Description.......: Executes a specified task and checks its completion status. If the task is 'mandatory' 
+#                     and fails, the script terminates. If the task is 'optional' and fails, the script 
+#                     continues, returning a non-zero status.
+# Parameters........: 
+#               - $1: Task name.
+#               - $2: Task type ('mandatory' or 'optional').
+#               - $3 - $6: Additional parameters required for the task (e.g., root requirement, prerequisites, actions, post-actions).
+# Returns...........: 
+#               - 0 (OK): If the task is successfully completed.
+#               - 1 (NOK): If the task fails and is 'optional'.
+#               - Exits the script: If the task fails and is 'mandatory'.
+# Usage.............: This function should be used to execute tasks where the failure of 'mandatory' tasks should 
+#                     stop the entire script, while 'optional' tasks' failure should not halt the script execution.
+# 
+###
+execute_and_check() {
+
+  local task_name="$1"
+  local require_root="$2"
+  local prereq="$3"
+  local actions="$4"
+  local postActions="$5"
+  local task_type="$6" 
+
+  execute_task "$task_name" $require_root "$prereq" "$actions" "$postActions"
+  local status=$?
+
+  if [$status -ne $OK ]; then
+
+    mark_task_ko "$task_name"
+
+    case "$task_type" in
+      "mandatory")
+        log_error "Mandatory task $task_name failed. Stopping the script."
+        exit 1
+        ;;
+
+      "optional")
+        log_warn "Optional task $task_name failed. Continuing with the script."
+        return 1
+        ;;
+
+      *)
+        log_error "Unrecognized task type $task_type for task $task_name."
+        return 1
+        ;;
+        
+    esac
+
+  fi
+
+  return $OK
+}
+
 
 ### Check if Task Failed Previously
 #
@@ -408,6 +462,19 @@ install_package(){
 
 #-------------- 04_option.sh
 
+### Process Command Line Arguments for Debug Mode
+#
+# Description.......: This script segment checks for the presence of the '--debug' flag in the command line arguments.
+#                     If '--debug' is found, the script sets DEBUG_MODE to 1, enabling debug functionality.
+#                     This is useful for turning on additional logging or diagnostic output in the script.
+# Arguments.........: 
+#               - --debug (optional): Flag to enable debug mode.
+# Returns...........: None directly. Sets the global variable DEBUG_MODE to 1 if '--debug' is present.
+# Usage.............: Place this snippet at the beginning of a script to enable debug mode based on command line input.
+# 
+# Example...........: `./script.sh --debug` will enable debug mode by setting DEBUG_MODE to 1.
+#
+###
 DEBUG_MODE=0
 
 for arg in "$@"; do
@@ -422,13 +489,27 @@ done
 #-------------- system/update_and_upgrade.sh - mandatory
 
 
-### Task - system update && upgrade
+### Execute and Check Task
 #
-# Function..........: update_and_upgrade
-# Description:......: Updates and upgrades the system using apt-get. 
-#                     This function executes the system update and upgrade process.
-# Requires Root:....: Yes
-# Returns:..........: Returns 1 on failure, otherwise void.
+# Function..........: execute_and_check
+# Description.......: Executes a specified task and checks its completion status. It marks the task as failed 
+#                     using 'mark_task_ko' if it does not complete successfully. If the task is marked as 
+#                     'mandatory' and fails, the script terminates with an error message. If the task is marked 
+#                     as 'optional' and fails, a warning is logged, and the script continues with a non-zero status.
+# Parameters........: 
+#               - $1: Task name.
+#               - $2: Root requirement (true/false).
+#               - $3: Prerequisites command or function.
+#               - $4: Actions to perform in the task.
+#               - $5: Post-actions to perform after the main actions.
+#               - $6: Task type ('mandatory' or 'optional').
+# Returns...........: 
+#               - 0 (OK): If the task is successfully completed.
+#               - 1 (NOK): If the task fails and is 'optional'.
+#               - Exits the script: If the task fails and is 'mandatory'.
+# Usage.............: This function should be used to execute tasks with a specific requirement on the outcome. 
+#                     Use 'mandatory' for critical tasks whose failure should stop the script, and 'optional' for 
+#                     tasks where failure does not impede the continuation of the script.
 #
 ###
 task_update_and_upgrade() {
@@ -438,8 +519,9 @@ task_update_and_upgrade() {
     local prereq=""
     local actions="apt-get update &> /dev/null && apt-get upgrade -y &> /dev/null" 
     local postActions=""
+    local task_type="mandatory"
 
-    if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
+    if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
         log_error "System upgrade failed."
         return $NOK
     fi
@@ -471,8 +553,10 @@ task_add_user_with_sudo_privileges() {
   local prereq="check_prerequisites_add_user_with_sudo_privileges"
   local actions="run_action_add_user_with_sudo_privileges"
   local postActions=""
+  local task_type="mandatory"
 
-  if ! execute_task "$name" $isRootRequired "$prereq" "$actions" "$postActions"; then
+
+  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
     return $NOK
   fi
@@ -574,4 +658,4 @@ ask_for_username_approval() {
 }
 
 # Run the function to add a new user with sudo
-task_add_user_with_sudo_privileges
+task_add_user_with_sudo_privileges 

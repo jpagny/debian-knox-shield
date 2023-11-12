@@ -50,7 +50,6 @@ execute_task() {
   if [[ "$require_root" == "true" ]]; then
     if ! verify_has_root_privileges; then
       log_error "Root privileges required for $task_name."
-      mark_task_ko "$task_name"
       return $NOK
     fi
   fi
@@ -64,7 +63,6 @@ execute_task() {
       log_info "Prerequisites completed"
     else
       log_error "Prerequisites failed"
-      mark_task_ko "$task_name"
       return $NOK  # Stop the procedure if the prerequisite fails
     fi  
 
@@ -77,7 +75,6 @@ execute_task() {
     log_info "Actions completed"
   else
     log_error "Actions failed"
-    mark_task_ko "$task_name"
     return $NOK  # Optionally stop also if actions fail
   fi
 
@@ -88,7 +85,6 @@ execute_task() {
 
       if ! eval "$postActions"; then
           log_error "Post actions failed"
-          mark_task_ko "$task_name"
           return $NOK  # Stop the script if post actions fails
       else
           log_info "Post actions completed successfully"
@@ -101,6 +97,64 @@ execute_task() {
 
   log_info "Task $task_name execution completed successfully"
 }
+
+### Execute and Check Task
+#
+# Function..........: execute_and_check
+# Description.......: Executes a specified task and checks its completion status. If the task is 'mandatory' 
+#                     and fails, the script terminates. If the task is 'optional' and fails, the script 
+#                     continues, returning a non-zero status.
+# Parameters........: 
+#               - $1: Task name.
+#               - $2: Task type ('mandatory' or 'optional').
+#               - $3 - $6: Additional parameters required for the task (e.g., root requirement, prerequisites, actions, post-actions).
+# Returns...........: 
+#               - 0 (OK): If the task is successfully completed.
+#               - 1 (NOK): If the task fails and is 'optional'.
+#               - Exits the script: If the task fails and is 'mandatory'.
+# Usage.............: This function should be used to execute tasks where the failure of 'mandatory' tasks should 
+#                     stop the entire script, while 'optional' tasks' failure should not halt the script execution.
+# 
+###
+execute_and_check() {
+
+  local task_name="$1"
+  local require_root="$2"
+  local prereq="$3"
+  local actions="$4"
+  local postActions="$5"
+  local task_type="$6" 
+
+  execute_task "$task_name" $require_root "$prereq" "$actions" "$postActions"
+  local status=$?
+
+  if [$status -ne $OK ]; then
+
+    mark_task_ko "$task_name"
+
+    case "$task_type" in
+      "mandatory")
+        log_error "Mandatory task $task_name failed. Stopping the script."
+        exit 1
+        ;;
+
+      "optional")
+        log_warn "Optional task $task_name failed. Continuing with the script."
+        return 1
+        ;;
+
+      *)
+        log_error "Unrecognized task type $task_type for task $task_name."
+        return 1
+        ;;
+        
+    esac
+
+  fi
+
+  return $OK
+}
+
 
 ### Check if Task Failed Previously
 #
