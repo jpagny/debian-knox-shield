@@ -211,7 +211,7 @@ execute_task() {
 
   # 01 - Check if Task Previously Succeeded
   if check_task_failed_previously "$task_name"; then
-    echo "La tâche $task_name a déjà réussi précédemment. Elle est sautée."
+    echo "The task $task_name has already succeeded previously. It is being skipped."
     return "$OK"
   fi
 
