@@ -1,0 +1,2 @@
+mandatory|system/update_and_upgrade.sh
+mandatory|user/add_user_sudo.sh

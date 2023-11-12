@@ -72,6 +72,11 @@ run_action_add_user_with_sudo_privileges() {
 check_prerequisites_add_user_with_sudo_privileges() {
 
   # install jq package
+  if ! install_package "sudo"; then
+    return $NOK
+  fi
+
+  # install jq package
   if ! install_package "jq"; then
     return $NOK
   fi

@@ -45,6 +45,12 @@ install_package(){
     
   package=$1
 
+  # Check if APT is available
+  if ! command -v apt-get &> /dev/null; then
+    log_error "APT package manager not found. This script is intended for Debian-based systems."
+    return $NOK
+  fi
+
   if ! command -v $package &> /dev/null; then
     log_info "$package is not installed. Installing..."
 
