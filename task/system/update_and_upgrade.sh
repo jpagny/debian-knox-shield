@@ -9,7 +9,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 
 ### Update and Upgrade System Task
 #
-# Function..........: task_update_and_upgrade
+# Function..........: task_update_and_upgrade 
 # Description.......: Executes the system update and upgrade process. This function updates the package 
 #                     lists and then performs an upgrade of all installed packages. The task requires root 
 #                     privileges to execute and can be set as either mandatory or optional.
@@ -42,5 +42,5 @@ task_update_and_upgrade() {
     return "$OK"
 }
 
-# Run the update and upgrade function
+# Run the update and upgrade task
 task_update_and_upgrade

@@ -129,5 +129,5 @@ ask_for_username_approval() {
   echo "$username"
 }
 
-# Run the function to add a new user with sudo
+# Run the task to add a new user with sudo
 task_add_user_with_sudo_privileges 
