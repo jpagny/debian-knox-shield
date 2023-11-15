@@ -17,13 +17,13 @@ source "$(dirname "$0")/../core/03_utils.sh"
 # Output............: Logs the progress and results of the user creation process.
 #
 ###
-task_add_user_with_sudo_privileges() {  
+task_add_random_user_with_sudo_privileges() {  
 
   # Add the user to the system with the generated username and the provided password
-  local name="Add User"
+  local name="add_random_user_with_sudo_privileges"
   local isRootRequired=true
-  local prereq="check_prerequisites_add_user_with_sudo_privileges"
-  local actions="run_action_add_user_with_sudo_privileges"
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
   local postActions=""
   local task_type=""
 
@@ -51,7 +51,7 @@ task_add_user_with_sudo_privileges() {
 #                     during the process.
 #
 ###
-run_action_add_user_with_sudo_privileges() {
+run_action_add_random_user_with_sudo_privileges() {
   # Ask for username approval and capture the returned username
   username=$(ask_for_username_approval)
 
@@ -72,7 +72,7 @@ run_action_add_user_with_sudo_privileges() {
 # Output............: Logs the progress and results of the prerequisite check.
 #
 ###
-check_prerequisites_add_user_with_sudo_privileges() {
+check_prerequisites_add_random_user_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "sudo"; then
@@ -130,4 +130,4 @@ ask_for_username_approval() {
 }
 
 # Run the task to add a new user with sudo
-task_add_user_with_sudo_privileges 
+task_add_random_user_with_sudo_privileges
