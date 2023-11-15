@@ -31,7 +31,7 @@ task_ssh_deactivate_root() {
   local postActions="post_actions_$name"
   local task_type=""
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "SSH root deactivation failed."
     return "$NOK"
   fi
@@ -74,23 +74,22 @@ check_prerequisites_ssh_deactivate_root() {
 ###
 run_action_ssh_deactivate_root() {
 
+  local sshd_config="/etc/ssh/sshd_config"
+
   log_info "Checking SSH configuration for PermitRootLogin setting."
 
   # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
   if grep -q "^PermitRootLogin yes" "$sshd_config"; then
-    log_info "PermitRootLogin set to 'yes'. Changing to 'no'."
+    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
     # If it exists and is set to 'yes', replace it with 'no'
-    actions="sudo sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config"
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
   else
     log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
     # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
-    actions="echo 'PermitRootLogin no' | sudo tee -a $sshd_config"
+    echo 'PermitRootLogin no' | tee -a $sshd_config
   fi
 
-  local configs="sudo service ssh restart"
-  log_info "Restarting SSH service to apply changes."
-
-  execute_task "$prereq" "$name" "$actions" "$configs"
+  return "$OK"
 }
 
 ### Post Actions for Deactivating Root SSH
@@ -109,16 +108,22 @@ post_actions_ssh_deactivate_root() {
 
   # Using systemctl to restart the SSH service
   if systemctl is-active --quiet ssh; then
-    systemctl restart ssh
+
+    systemctl restart sshd
+
     if [ $? -eq 0 ]; then
       log_info "SSH service restarted successfully."
+      
     else
       log_error "Failed to restart SSH service."
       return "$NOK"
+
     fi
+
   else
     log_error "SSH service is not active."
     return "$NOK"
+
   fi
 
   return "$OK"

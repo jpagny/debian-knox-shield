@@ -28,7 +28,7 @@ task_add_random_user_with_sudo_privileges() {
   local task_type=""
 
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
     return "$NOK"
   fi

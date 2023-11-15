@@ -7,7 +7,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 
 ### Task for Installing and Configuring Fail2Ban
 #
-# Function..........: task_fail2ban
+# Function..........: add_fail2ban
 # Description.......: Performs the task of installing and configuring Fail2Ban on the system. Fail2Ban is a tool 
 #                     that helps protect against unauthorized access by monitoring system logs and automatically 
 #                     banning IP addresses that show malicious signs. This task involves checking prerequisites, 
@@ -28,7 +28,7 @@ task_add_fail2ban() {
   local postActions="post_actions_$name"
   local task_type=""
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Fail2Ban installation and configuration failed."
     return "$NOK"
   fi
@@ -97,8 +97,10 @@ post_actions_add_fail2ban() {
   
     log_info "Restarting Fail2Ban service to apply new configuration."
 
+    systemctl enable fail2ban
+
     if systemctl is-active --quiet fail2ban; then
-        sudo systemctl restart fail2ban
+        systemctl restart fail2ban
         if [ $? -eq 0 ]; then
             log_info "Fail2Ban service restarted successfully."
         else

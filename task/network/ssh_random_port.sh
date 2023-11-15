@@ -32,7 +32,7 @@ task_ssh_random_port() {
   local postActions="post_actions_$name"
   local task_type=""
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Failed to set a random SSH port."
     return "$NOK"
   fi

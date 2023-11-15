@@ -28,7 +28,7 @@ task_sheduler_auto_update_upgrade() {
   local postActions=""
   local task_type=""
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Failed to set up automatic update and upgrade scheduler."
     return "$NOK"
   fi

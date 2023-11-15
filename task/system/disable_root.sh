@@ -30,7 +30,7 @@ task_system_disable_root() {
   local postActions=""
   local task_type=""
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "System root login deactivation failed."
     return "$NOK"
   fi
@@ -90,10 +90,11 @@ prerequisite_system_disable_root() {
 run_action_system_disable_root() {
 
     local random_password=$(openssl rand -base64 48)
-    echo 'root:$random_password' 
-    sudo chpasswd
+    log_info "Generating a random password for root."
 
-    log_info "Root account has been disabled."
+    echo "root:$random_password" | chpasswd
+
+    log_info "Root account password has been changed to a random value, effectively disabling direct root login."
 }
 
 # Run the task to disable root account

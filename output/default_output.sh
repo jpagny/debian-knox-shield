@@ -554,7 +554,7 @@ task_add_random_user_with_sudo_privileges() {
   local task_type="mandatory"
 
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "User creation failed."
     return "$NOK"
   fi
@@ -683,7 +683,7 @@ task_sheduler_auto_update_upgrade() {
   local postActions=""
   local task_type="mandatory"
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Failed to set up automatic update and upgrade scheduler."
     return "$NOK"
   fi
@@ -768,7 +768,7 @@ task_ssh_random_port() {
   local postActions="post_actions_$name"
   local task_type="mandatory"
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Failed to set a random SSH port."
     return "$NOK"
   fi
@@ -861,7 +861,7 @@ task_ssh_random_port
 
 ### Task for Installing and Configuring Fail2Ban
 #
-# Function..........: task_fail2ban
+# Function..........: add_fail2ban
 # Description.......: Performs the task of installing and configuring Fail2Ban on the system. Fail2Ban is a tool 
 #                     that helps protect against unauthorized access by monitoring system logs and automatically 
 #                     banning IP addresses that show malicious signs. This task involves checking prerequisites, 
@@ -882,7 +882,7 @@ task_add_fail2ban() {
   local postActions="post_actions_$name"
   local task_type="mandatory"
 
-  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "Fail2Ban installation and configuration failed."
     return "$NOK"
   fi
@@ -951,8 +951,10 @@ post_actions_add_fail2ban() {
   
     log_info "Restarting Fail2Ban service to apply new configuration."
 
+    systemctl enable fail2ban
+
     if systemctl is-active --quiet fail2ban; then
-        sudo systemctl restart fail2ban
+        systemctl restart fail2ban
         if [ $? -eq 0 ]; then
             log_info "Fail2Ban service restarted successfully."
         else
@@ -969,3 +971,132 @@ post_actions_add_fail2ban() {
 
 # Run the task to add fail2ban and configure
 task_add_fail2ban
+#-------------- network/ssh_deactivate_root.sh - andatory
+
+# shellcheck source=/dev/null
+
+### Task to Deactivate Root SSH Login
+#
+# Function..........: task_ssh_deactivate_root
+# Description.......: Executes a series of steps to deactivate root SSH login. The function checks prerequisites, 
+#                     executes the main action to modify SSH settings, and performs any necessary post-actions. 
+#                     This task is crucial for enhancing the security of the SSH service.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If all steps are successfully executed.
+#               - 1 (NOK): If any step in the process fails.
+#
+###
+task_ssh_deactivate_root() {
+
+  # Deactivate root SSH login
+  local name="ssh_deactivate_root"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="andatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "SSH root deactivation failed."
+    return "$NOK"
+  fi
+
+  log_info "Root SSH login has been successfully deactivated."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for Deactivating Root SSH
+#
+# Function..........: check_prerequisites_ssh_deactivate_root
+# Description.......: Ensures that all prerequisites for deactivating root SSH login are met. This function primarily 
+#                     checks for the installation of the SSH package and installs it if not already present.
+# Returns...........: 
+#               - 0 (OK): If the SSH package is installed or successfully installed.
+#               - 1 (NOK): If the installation of the SSH package fails.
+#
+###
+check_prerequisites_ssh_deactivate_root() {
+
+  # install ssh package
+  if ! install_package "ssh"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Deactivate Root SSH Login
+#
+# Function..........: run_action_ssh_deactivate_root
+# Description.......: Modifies the SSH daemon configuration to deactivate root login. It checks the current 
+#                     setting of 'PermitRootLogin' in the sshd_config file. If it's set to 'yes', the function 
+#                     changes it to 'no'. If the setting is absent or set to any other value, it adds 'PermitRootLogin no'.
+#                     After modifying the configuration, it restarts the SSH service to apply changes.
+# Parameters........: None. Relies on global variables such as 'sshd_config'.
+# Returns...........: The return status of the 'execute_task' function, which executes the actions and configurations.
+#
+###
+run_action_ssh_deactivate_root() {
+
+  local sshd_config="/etc/ssh/sshd_config"
+
+  log_info "Checking SSH configuration for PermitRootLogin setting."
+
+  # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
+  if grep -q "^PermitRootLogin yes" "$sshd_config"; then
+    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
+    # If it exists and is set to 'yes', replace it with 'no'
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
+  else
+    log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
+    # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
+    echo 'PermitRootLogin no' | tee -a $sshd_config
+  fi
+
+  return "$OK"
+}
+
+### Post Actions for Deactivating Root SSH
+#
+# Function..........: post_actions_ssh_deactivate_root
+# Description.......: Performs post-action tasks after modifying SSH configuration to deactivate root login.
+#                     This primarily involves restarting the SSH service to apply the changes made to the configuration.
+#                     It checks if the SSH service is active and then attempts to restart it.
+# Returns...........: 
+#               - 0 (OK): If the SSH service is successfully restarted.
+#               - 1 (NOK): If the SSH service is not active or fails to restart.
+#
+###
+post_actions_ssh_deactivate_root() {
+  log_info "Restarting SSH service to apply changes."
+
+  # Using systemctl to restart the SSH service
+  if systemctl is-active --quiet ssh; then
+
+    systemctl restart sshd
+
+    if [ $? -eq 0 ]; then
+      log_info "SSH service restarted successfully."
+      
+    else
+      log_error "Failed to restart SSH service."
+      return "$NOK"
+
+    fi
+
+  else
+    log_error "SSH service is not active."
+    return "$NOK"
+
+  fi
+
+  return "$OK"
+}
+
+
+# Run the task to deactivate root SSH login
+task_ssh_deactivate_root
