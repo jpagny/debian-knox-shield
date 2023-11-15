@@ -1,2 +1,10 @@
+# System
 mandatory|system/update_and_upgrade.sh
-mandatory|user/add_user_sudo.sh
+mandatory|user/add_random_user_sudo.sh
+mandatory|scheduler/auto_update_upgrade.sh
+
+# Network
+mandatory|network/ssh_random_port.sh
+
+# Tool secure
+mandatory|tool_secure/fail2ban.sh

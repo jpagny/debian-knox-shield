@@ -494,7 +494,7 @@ done
 
 ### Update and Upgrade System Task
 #
-# Function..........: task_update_and_upgrade
+# Function..........: task_update_and_upgrade 
 # Description.......: Executes the system update and upgrade process. This function updates the package 
 #                     lists and then performs an upgrade of all installed packages. The task requires root 
 #                     privileges to execute and can be set as either mandatory or optional.
@@ -511,7 +511,7 @@ done
 ###
 task_update_and_upgrade() {
 
-    local name="System update && upgrade"
+    local name="system_update_upgrade"
     local isRootRequired=true
     local prereq=""
     local actions="apt-get update &> /dev/null && apt-get upgrade -y &> /dev/null" 
@@ -527,9 +527,9 @@ task_update_and_upgrade() {
     return "$OK"
 }
 
-# Run the update and upgrade function
+# Run the update and upgrade task
 task_update_and_upgrade
-#-------------- user/add_user_sudo.sh - mandatory
+#-------------- user/add_random_user_sudo.sh - mandatory
 
 # shellcheck source=/dev/null
 
@@ -543,13 +543,13 @@ task_update_and_upgrade
 # Output............: Logs the progress and results of the user creation process.
 #
 ###
-task_add_user_with_sudo_privileges() {  
+task_add_random_user_with_sudo_privileges() {  
 
   # Add the user to the system with the generated username and the provided password
-  local name="Add User"
+  local name="add_random_user_with_sudo_privileges"
   local isRootRequired=true
-  local prereq="check_prerequisites_add_user_with_sudo_privileges"
-  local actions="run_action_add_user_with_sudo_privileges"
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
   local postActions=""
   local task_type="mandatory"
 
@@ -577,7 +577,7 @@ task_add_user_with_sudo_privileges() {
 #                     during the process.
 #
 ###
-run_action_add_user_with_sudo_privileges() {
+run_action_add_random_user_with_sudo_privileges() {
   # Ask for username approval and capture the returned username
   username=$(ask_for_username_approval)
 
@@ -598,7 +598,7 @@ run_action_add_user_with_sudo_privileges() {
 # Output............: Logs the progress and results of the prerequisite check.
 #
 ###
-check_prerequisites_add_user_with_sudo_privileges() {
+check_prerequisites_add_random_user_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "sudo"; then
@@ -655,5 +655,317 @@ ask_for_username_approval() {
   echo "$username"
 }
 
-# Run the function to add a new user with sudo
-task_add_user_with_sudo_privileges 
+# Run the task to add a new user with sudo
+task_add_random_user_with_sudo_privileges
+#-------------- scheduler/auto_update_upgrade.sh - mandatory
+# shellcheck source=/dev/null
+
+### Task for Setting Up Automatic System Update and Upgrade Scheduler
+#
+# Function..........: task_scheduler_auto_update_upgrade
+# Description.......: Sets up a scheduler for automatically updating and upgrading the system at regular intervals. 
+#                     This task automates the process of keeping the system up-to-date with the latest packages 
+#                     and security updates.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If the scheduler is successfully set up.
+#               - 1 (NOK): If setting up the scheduler fails.
+#
+###
+task_sheduler_auto_update_upgrade() {
+
+  local name="sheduler_auto_update_upgrade"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Failed to set up automatic update and upgrade scheduler."
+    return "$NOK"
+  fi
+
+  log_info "Automatic update and upgrade scheduler successfully set up."
+  
+  return "$OK"
+}
+
+check_prerequisites_sheduler_auto_update_upgrade() {
+
+  # install ssh package
+  if ! install_package "unattended-upgrades"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Configure Automatic System Update and Upgrade
+#
+# Function..........: run_action_scheduler_auto_update_upgrade
+# Description.......: Configures the system to perform automatic updates and upgrades using unattended-upgrades. 
+#                     This function first configures the necessary parameters in the unattended-upgrades 
+#                     configuration file. It then sets up automatic update checks and enables automatic upgrades 
+#                     by modifying the apt configuration. A backup of the original configuration files is created 
+#                     before any changes are made. Additionally, the function performs a dry run to test the 
+#                     configuration.
+# Parameters........: None. The function uses predefined file paths and configurations.
+# Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
+#
+###
+run_action_sheduler_auto_update_upgrade() {
+
+    # Configure unattended-upgrades
+    log_info "Configuring automatic updates..."
+    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades.backup
+    sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+    sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+
+    # Enable automatic updates
+    log_info "Activating automatic updates and upgrades..."
+    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.backup
+    echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+    echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+
+    # Test the configuration
+    log_debug "Testing the automatic update configuration..."
+    unattended-upgrades --dry-run --debug
+
+    log_info "Configuration complete."
+}
+
+# Run the task to disable root account
+task_sheduler_auto_update_upgrade
+#-------------- network/ssh_random_port.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Setting a Random SSH Port
+#
+# Function..........: task_ssh_random_port
+# Description.......: Executes a series of actions to set a random port for the SSH service. 
+#                     This involves checking prerequisites, executing the main action to set a random port,
+#                     and performing any necessary post-actions. The task ensures enhanced security by 
+#                     changing the SSH port to a non-standard value.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If the process of setting a random SSH port is successful.
+#               - 1 (NOK): If any step in the process fails.
+#
+###
+task_ssh_random_port() {
+  
+  # Random port ssh
+  local name="ssh_random_port"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Failed to set a random SSH port."
+    return "$NOK"
+  fi
+
+  log_info "Random SSH port has been successfully set."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for SSH Random Port Configuration
+#
+# Function..........: check_prerequisites_ssh_random_port
+# Description.......: Verifies if the SSH package is installed on the system. If not, it attempts to install 
+#                     the SSH package. This check ensures that the necessary SSH tools are available 
+#                     before attempting to modify SSH configuration settings, like changing the SSH port.
+# Returns...........: 
+#               - 0 (OK): If the SSH package is already installed or successfully installed during the execution.
+#               - 1 (NOK): If the SSH package cannot be installed.
+#
+###
+check_prerequisites_ssh_random_port() {
+  # install ssh package
+  if ! install_package "ssh"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Set a Random SSH Port
+#
+# Function..........: run_action_ssh_random_port
+# Description.......: Sets a random port for the SSH service by modifying the SSH configuration file (sshd_config). 
+#                     It selects a random port between 1024 and 65535, then updates the sshd_config file to use this port. 
+#                     After updating the configuration, the SSH service is restarted to apply the changes.
+#                     The new port number is also saved to a file (/etc/ssh/ssh_port_info.txt) for reference.
+# Parameters........: None. Uses local variables to generate a random port and define actions.
+# Returns...........: The return status of the 'execute_task' function, which executes the actions and configurations.
+#
+###
+run_action_ssh_random_port() {
+  local prereq="Setting a random SSH port"
+  local name="Random SSH Port"
+  local random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
+  local actions="sudo sed -i 's/^#Port 22/Port $random_port/' /etc/ssh/sshd_config"
+  local configs="sudo service ssh restart"
+
+  execute_task "$prereq" "$name" "$actions" "$configs"
+
+  # Save the new SSH port to a file for reference
+  echo "SSH is now listening on port: $random_port" | sudo tee /etc/ssh/ssh_port_info.txt
+}
+
+### Post Actions for SSH Random Port Configuration
+#
+# Function..........: post_actions_ssh_random_port
+# Description.......: Performs the final action after setting a random SSH port, which involves restarting 
+#                     the SSH service. This ensures that the new port setting takes effect. The function checks 
+#                     if the SSH service is active and then attempts to restart it.
+# Returns...........: 
+#               - 0 (OK): If the SSH service is active and successfully restarted.
+#               - 1 (NOK): If the SSH service is not active or fails to restart.
+#
+###
+post_actions_ssh_random_port() {
+  log_info "Restarting SSH service to apply random port changes."
+
+  # Using systemctl to restart the SSH service
+  if systemctl is-active --quiet ssh; then
+    systemctl restart ssh
+    if [ $? -eq 0 ]; then
+      log_info "SSH service restarted successfully to apply new port settings."
+    else
+    log_error "SSH service is not active and cannot be restarted."
+      return "$NOK"
+    fi
+  else
+    log_error "SSH service is not active and cannot be restarted."
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+
+# Run the task to set a random SSH port
+task_ssh_random_port
+#-------------- tool_secure/fail2ban.sh - mandatory
+# shellcheck source=/dev/null
+
+### Task for Installing and Configuring Fail2Ban
+#
+# Function..........: task_fail2ban
+# Description.......: Performs the task of installing and configuring Fail2Ban on the system. Fail2Ban is a tool 
+#                     that helps protect against unauthorized access by monitoring system logs and automatically 
+#                     banning IP addresses that show malicious signs. This task involves checking prerequisites, 
+#                     running the installation and configuration actions, and performing any necessary post-actions.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If Fail2Ban is successfully installed and configured.
+#               - 1 (NOK): If the process fails at any point.#
+###
+task_add_fail2ban() {
+  
+  local name="add_fail2ban"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" "$task_type" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Fail2Ban installation and configuration failed."
+    return "$NOK"
+  fi
+
+  log_info "Fail2Ban has been successfully installed and configured."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for Fail2Ban Installation
+#
+# Function..........: check_prerequisites_fail2ban
+# Description.......: Verifies if the Fail2Ban package is installed on the system. If not, it attempts to 
+#                     install Fail2Ban. Fail2Ban is an intrusion prevention software framework that protects 
+#                     computer servers from brute-force attacks.
+# Returns...........: 
+#               - 0 (OK): If Fail2Ban is already installed or successfully installed during the execution.
+#               - 1 (NOK): If Fail2Ban cannot be installed.
+#
+###
+check_prerequisites_add_fail2ban() {
+  # install fail2ban package
+  if ! install_package "fail2ban"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Configure Fail2Ban
+#
+# Function..........: run_action_fail2ban
+# Description.......: Sets up the basic configuration for Fail2Ban by creating and populating a 'jail.local' file. 
+#                     This file sets the default ban time, find time, and maximum retry attempts before an IP is banned. 
+#                     These settings are crucial for defining how Fail2Ban handles potential security threats.
+# Parameters........: None. The function uses hardcoded values and a predefined path for the 'jail.local' file.
+# Returns...........: None directly. The configuration is written to '/etc/fail2ban/jail.local'.
+#
+###
+run_action_add_fail2ban() {
+
+    local jail_local="/etc/fail2ban/jail.local"
+
+    log_info "Configuring Fail2Ban with basic settings in jail.local."
+
+    echo '[DEFAULT]' | sudo tee $jail_local
+    echo 'bantime = 10m' | sudo tee -a $jail_local
+    echo 'findtime = 10m' | sudo tee -a $jail_local
+    echo 'maxretry = 5' | sudo tee -a $jail_local
+
+    log_info "Fail2Ban configuration successfully written to $jail_local."
+}
+
+### Post Actions for Fail2Ban Configuration
+#
+# Function..........: post_actions_fail2ban
+# Description.......: Restarts the Fail2Ban service to apply any new configurations made to the system. This function 
+#                     first checks if the Fail2Ban service is active and then proceeds to restart it, ensuring that 
+#                     all configuration changes are loaded and enforced.
+# Returns...........: 
+#               - 0 (OK): If the Fail2Ban service is successfully restarted.
+#               - 1 (NOK): If the Fail2Ban service is not active or fails to restart.
+#
+###
+post_actions_add_fail2ban() {
+  
+    log_info "Restarting Fail2Ban service to apply new configuration."
+
+    if systemctl is-active --quiet fail2ban; then
+        sudo systemctl restart fail2ban
+        if [ $? -eq 0 ]; then
+            log_info "Fail2Ban service restarted successfully."
+        else
+            log_error "Failed to restart Fail2Ban service."
+            return "$NOK"
+        fi
+    else
+        log_error "Fail2Ban service is not active."
+        return "$NOK"
+    fi
+
+    return "$OK"
+}
+
+# Run the task to add fail2ban and configure
+task_add_fail2ban

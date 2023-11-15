@@ -19,7 +19,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 #               - 0 (OK): If Fail2Ban is successfully installed and configured.
 #               - 1 (NOK): If the process fails at any point.#
 ###
-task_fail2ban() {
+task_add_fail2ban() {
   
   local name="add_fail2ban"
   local isRootRequired=true
@@ -49,7 +49,7 @@ task_fail2ban() {
 #               - 1 (NOK): If Fail2Ban cannot be installed.
 #
 ###
-check_prerequisites_fail2ban() {
+check_prerequisites_add_fail2ban() {
   # install fail2ban package
   if ! install_package "fail2ban"; then
     return "$NOK"
@@ -68,7 +68,7 @@ check_prerequisites_fail2ban() {
 # Returns...........: None directly. The configuration is written to '/etc/fail2ban/jail.local'.
 #
 ###
-run_action_fail2ban() {
+run_action_add_fail2ban() {
 
     local jail_local="/etc/fail2ban/jail.local"
 
@@ -93,7 +93,7 @@ run_action_fail2ban() {
 #               - 1 (NOK): If the Fail2Ban service is not active or fails to restart.
 #
 ###
-post_actions_fail2ban() {
+post_actions_add_fail2ban() {
   
     log_info "Restarting Fail2Ban service to apply new configuration."
 
@@ -114,4 +114,4 @@ post_actions_fail2ban() {
 }
 
 # Run the task to add fail2ban and configure
-task_fail2ban
+task_add_fail2ban

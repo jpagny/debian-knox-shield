@@ -64,6 +64,10 @@ append_scripts_from_config() {
   local path_config_file="${CONFIG_DIR}/${config_file}"
 
   while IFS='|' read -r script_type script_name || [ -n "$script_name" ]; do
+
+    # Skip lines starting with '#' or empty lines
+    [[ $script_type == \#* ]] || [ -z "$script_type" ] && continue
+
     local script_path="${TASK_DIR}/${script_name}"
 
     if [[ -f "$script_path" ]]; then

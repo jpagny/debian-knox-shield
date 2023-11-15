@@ -23,7 +23,7 @@ task_sheduler_auto_update_upgrade() {
 
   local name="sheduler_auto_update_upgrade"
   local isRootRequired=true
-  local prereq=""
+  local prereq="check_prerequisites_$name"
   local actions="run_action_$name"
   local postActions=""
   local task_type=""
@@ -38,7 +38,7 @@ task_sheduler_auto_update_upgrade() {
   return "$OK"
 }
 
-check_prerequisites_ssh_deactivate_root() {
+check_prerequisites_sheduler_auto_update_upgrade() {
 
   # install ssh package
   if ! install_package "unattended-upgrades"; then
@@ -61,7 +61,7 @@ check_prerequisites_ssh_deactivate_root() {
 # Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
 #
 ###
-run_action_scheduler_auto_update_upgrade() {
+run_action_sheduler_auto_update_upgrade() {
 
     # Configure unattended-upgrades
     log_info "Configuring automatic updates..."

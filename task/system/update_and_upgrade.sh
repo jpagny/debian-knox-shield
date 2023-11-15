@@ -26,7 +26,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 ###
 task_update_and_upgrade() {
 
-    local name="System update && upgrade"
+    local name="system_update_upgrade"
     local isRootRequired=true
     local prereq=""
     local actions="apt-get update &> /dev/null && apt-get upgrade -y &> /dev/null" 
