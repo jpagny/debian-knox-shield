@@ -6,11 +6,12 @@ mandatory|scheduler/auto_update_upgrade.sh
 # Network
 mandatory|network/ssh_random_port.sh
 
-# Tool secure
+# Tools Related to Security
 mandatory|tool_secure/fail2ban.sh
 
-
+# Variety of tools
+optional|tool/vim.sh
 
 # End 
-#andatory|network/ssh_deactivate_root.sh
-#mandatory|system/disable_root.sh
+andatory|network/ssh_deactivate_root.sh
+mandatory|system/disable_root.sh

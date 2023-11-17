@@ -1015,3 +1015,284 @@ post_actions_add_fail2ban() {
 
 # Run the task to add fail2ban and configure
 task_add_fail2ban
+#-------------- tool/vim.sh - optional
+# shellcheck source=/dev/null
+
+### Install Vim Text Editor
+#
+# Function..........: task_add_vim
+# Description.......: Installs the Vim text editor on the system. Vim is a highly configurable text editor built to 
+#                     enable efficient text editing. It is an improved version of the vi editor distributed with most UNIX systems.
+#                     This function checks for root privileges, executes the installation action, and handles any post-installation tasks.
+# Parameters........: 
+#               - None
+# Returns...........: 
+#               - 0 (OK): If Vim is successfully installed.
+#               - 1 (NOK): If the installation fails.
+#
+###
+task_add_vim() {
+  
+  local name="add_vim"
+  local isRootRequired=true
+  local prereq=""
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="optional"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Vim installation failed."
+    return "$NOK"
+  fi
+
+  log_info "Vim has been successfully installed."
+  
+  return "$OK"
+}
+
+### Install Vim Editor
+#
+# Function..........: run_action_add_vim
+# Description.......: Installs the Vim text editor. Vim is a highly configurable, powerful, and popular text editor 
+#                     that is an improved version of the vi editor. This function calls install_package to 
+#                     handle the installation process of Vim.
+# Returns...........: 
+#               - 0 (OK): If Vim is successfully installed.
+#               - 1 (NOK): If the installation fails.
+#
+###
+run_action_add_vim() {
+
+# install rsyslog package
+  if ! install_package "vim"; then
+    return "$NOK"
+  fi
+}
+
+# Run the task to add vim
+task_add_vim
+#-------------- network/ssh_deactivate_root.sh - andatory
+
+# shellcheck source=/dev/null
+
+### Task to Deactivate Root SSH Login
+#
+# Function..........: task_ssh_deactivate_root
+# Description.......: Executes a series of steps to deactivate root SSH login. The function checks prerequisites, 
+#                     executes the main action to modify SSH settings, and performs any necessary post-actions. 
+#                     This task is crucial for enhancing the security of the SSH service.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If all steps are successfully executed.
+#               - 1 (NOK): If any step in the process fails.
+#
+###
+task_ssh_deactivate_root() {
+
+  # Deactivate root SSH login
+  local name="ssh_deactivate_root"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="andatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "SSH root deactivation failed."
+    return "$NOK"
+  fi
+
+  log_info "Root SSH login has been successfully deactivated."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for Deactivating Root SSH
+#
+# Function..........: check_prerequisites_ssh_deactivate_root
+# Description.......: Ensures that all prerequisites for deactivating root SSH login are met. This function primarily 
+#                     checks for the installation of the SSH package and installs it if not already present.
+# Returns...........: 
+#               - 0 (OK): If the SSH package is installed or successfully installed.
+#               - 1 (NOK): If the installation of the SSH package fails.
+#
+###
+check_prerequisites_ssh_deactivate_root() {
+
+  # install ssh package
+  if ! install_package "ssh"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Deactivate Root SSH Login
+#
+# Function..........: run_action_ssh_deactivate_root
+# Description.......: Modifies the SSH daemon configuration to deactivate root login. It checks the current 
+#                     setting of 'PermitRootLogin' in the sshd_config file. If it's set to 'yes', the function 
+#                     changes it to 'no'. If the setting is absent or set to any other value, it adds 'PermitRootLogin no'.
+#                     After modifying the configuration, it restarts the SSH service to apply changes.
+# Parameters........: None. Relies on global variables such as 'sshd_config'.
+# Returns...........: The return status of the 'execute_task' function, which executes the actions and configurations.
+#
+###
+run_action_ssh_deactivate_root() {
+
+  local sshd_config="/etc/ssh/sshd_config"
+
+  log_info "Checking SSH configuration for PermitRootLogin setting."
+
+  # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
+  if grep -q "^PermitRootLogin yes" "$sshd_config"; then
+    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
+    # If it exists and is set to 'yes', replace it with 'no'
+    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
+  else
+    log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
+    # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
+    echo 'PermitRootLogin no' | tee -a $sshd_config
+  fi
+
+  return "$OK"
+}
+
+### Post Actions for Deactivating Root SSH
+#
+# Function..........: post_actions_ssh_deactivate_root
+# Description.......: Performs post-action tasks after modifying SSH configuration to deactivate root login.
+#                     This primarily involves restarting the SSH service to apply the changes made to the configuration.
+#                     It checks if the SSH service is active and then attempts to restart it.
+# Returns...........: 
+#               - 0 (OK): If the SSH service is successfully restarted.
+#               - 1 (NOK): If the SSH service is not active or fails to restart.
+#
+###
+post_actions_ssh_deactivate_root() {
+  log_info "Restarting SSH service to apply changes."
+
+  # Using systemctl to restart the SSH service
+  if systemctl is-active --quiet ssh; then
+
+    systemctl restart sshd
+
+    if [ $? -eq 0 ]; then
+      log_info "SSH service restarted successfully."
+      
+    else
+      log_error "Failed to restart SSH service."
+      return "$NOK"
+
+    fi
+
+  else
+    log_error "SSH service is not active."
+    return "$NOK"
+
+  fi
+
+  return "$OK"
+}
+
+
+# Run the task to deactivate root SSH login
+task_ssh_deactivate_root
+#-------------- system/disable_root.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Disabling Root System Login
+#
+# Function..........: task_system_disable_root
+# Description.......: Executes the process of disabling the root system login. This is done by executing
+#                     a series of actions defined in the 'run_action_system_disable_root' function. 
+#                     It ensures that root login is securely disabled to enhance system security.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If disabling root system login is successful.
+#               - 1 (NOK): If the process fails.
+#
+###
+task_system_disable_root() {
+
+  local name="system_disable_root"
+  local isRootRequired=true
+  local prereq=""
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "System root login deactivation failed."
+    return "$NOK"
+  fi
+
+  log_info "System root login has been successfully deactivated."
+  
+  return "$OK"
+}
+
+### Prerequisite Check for Disabling Root System Login
+#
+# Function..........: prerequisite_system_disable_root
+# Description.......: Checks if there is at least one user with sudo privileges on the system. If no sudoers 
+#                     are found, it prompts the user for confirmation before proceeding to disable the root 
+#                     account. This is a safety measure to avoid locking out of administrative access.
+# Returns...........: 
+#               - 0 (OK): If there is at least one sudoer or the user confirms to proceed without a sudoer.
+#               - 1 (NOK): If there are no sudoers and the user chooses not to proceed.
+#
+###
+prerequisite_system_disable_root() {
+    local sudoers_count
+    sudoers_count=$(getent group sudo | cut -d: -f4 | tr ',' ' ' | wc -w)
+
+    if [[ $sudoers_count -eq 0 ]]; then
+        log_warn "No users with sudo privileges found. Disabling root may lock out administrative access."
+
+        read -rp "Are you sure you want to continue? (y/N): " confirmation
+        case "$confirmation" in
+            [Yy]* )
+                log_info "Proceeding with root account deactivation."
+                return "$OK"
+                ;;
+            * )
+                log_error "Root deactivation aborted. No sudoers available."
+                return "$NOK"
+                ;;
+        esac
+    fi
+
+    log_info "Sudoers available. Safe to proceed with root deactivation."
+
+    return "$OK"
+}
+
+
+### Run Action to Disable Root System Login
+#
+# Function..........: run_action_system_disable_root
+# Description.......: Disables the root system login by changing the root password to a random, 
+#                     securely generated string. This enhances system security by making the root 
+#                     account inaccessible via traditional login methods. The function uses OpenSSL 
+#                     to generate a random base64-encoded password.
+# Returns...........: None directly. Outputs to stdout and logs information upon successful completion.
+#
+###
+run_action_system_disable_root() {
+
+    local random_password=$(openssl rand -base64 48)
+    log_info "Generating a random password for root."
+
+    echo "root:$random_password" | chpasswd
+
+    log_info "Root account password has been changed to a random value, effectively disabling direct root login."
+}
+
+# Run the task to disable root account
+task_system_disable_root
