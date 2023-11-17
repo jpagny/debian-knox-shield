@@ -52,7 +52,11 @@ install_package(){
     return "$NOK"
   fi
 
-  if ! command -v "$package" &> /dev/null; then
+  # Check if the package is already installed using dpkg
+  if dpkg -l "$package" &> /dev/null; then
+    log_info "$package is already installed."
+    return "$OK"
+  else
     log_info "$package is not installed. Installing..."
 
     if apt-get update &> /dev/null && apt-get install -y "$package" &> /dev/null; then
@@ -62,8 +66,5 @@ install_package(){
       log_error "Failed to install $package."
       return "$NOK"
     fi
-  else
-    log_info "$package is already installed."
-    return "$OK"
   fi
 }

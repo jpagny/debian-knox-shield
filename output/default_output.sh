@@ -445,7 +445,11 @@ install_package(){
     return "$NOK"
   fi
 
-  if ! command -v "$package" &> /dev/null; then
+  # Check if the package is already installed using dpkg
+  if dpkg -l "$package" &> /dev/null; then
+    log_info "$package is already installed."
+    return "$OK"
+  else
     log_info "$package is not installed. Installing..."
 
     if apt-get update &> /dev/null && apt-get install -y "$package" &> /dev/null; then
@@ -455,12 +459,8 @@ install_package(){
       log_error "Failed to install $package."
       return "$NOK"
     fi
-  else
-    log_info "$package is already installed."
-    return "$OK"
   fi
 }
-
 
 #-------------- 04_option.sh
 
@@ -582,7 +582,7 @@ run_action_add_random_user_with_sudo_privileges() {
   username=$(ask_for_username_approval)
 
   # Use the useradd command to create the user with the encrypted password
-  adduser --gecos "" "$username" 
+  adduser --gecos "" "$username"
 
   # Add the user to the sudo group
   usermod -aG sudo "$username"
@@ -810,16 +810,25 @@ check_prerequisites_ssh_random_port() {
 #
 ###
 run_action_ssh_random_port() {
-  local prereq="Setting a random SSH port"
-  local name="Random SSH Port"
-  local random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
-  local actions="sudo sed -i 's/^#Port 22/Port $random_port/' /etc/ssh/sshd_config"
-  local configs="sudo service ssh restart"
+  local random_port
+  local user_response
 
-  execute_task "$prereq" "$name" "$actions" "$configs"
+  while true; do
+    random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
+    read -p "Use port $random_port for SSH? (y/n): " user_response
 
-  # Save the new SSH port to a file for reference
-  echo "SSH is now listening on port: $random_port" | sudo tee /etc/ssh/ssh_port_info.txt
+    case $user_response in
+      [Yy]* ) 
+        sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
+        log_info "SSH is now listening on port: $random_port"
+        break;;
+      [Nn]* ) 
+        log_debug "Skipping port $random_port."
+        continue;;
+      * ) 
+        echo "Please answer yes or no.";;
+    esac
+  done
 }
 
 ### Post Actions for SSH Random Port Configuration
@@ -849,6 +858,7 @@ post_actions_ssh_random_port() {
     log_error "SSH service is not active and cannot be restarted."
     return "$NOK"
   fi
+
 
   return "$OK"
 }
@@ -892,22 +902,46 @@ task_add_fail2ban() {
   return "$OK"
 }
 
-### Check Prerequisites for Fail2Ban Installation
+### Check Prerequisites for Fail2Ban and Rsyslog Installation
 #
-# Function..........: check_prerequisites_fail2ban
-# Description.......: Verifies if the Fail2Ban package is installed on the system. If not, it attempts to 
-#                     install Fail2Ban. Fail2Ban is an intrusion prevention software framework that protects 
-#                     computer servers from brute-force attacks.
+# Function..........: check_prerequisites_add_fail2ban
+# Description.......: Ensures that both 'rsyslog' and 'fail2ban' packages are installed on the system. 
+#                     'rsyslog' is used for system logging, and its presence is crucial for Fail2Ban to monitor logs. 
+#                     'fail2ban' is an intrusion prevention software framework that protects computer servers from brute-force attacks.
+#                     The function attempts to install these packages if they are not already present.
 # Returns...........: 
-#               - 0 (OK): If Fail2Ban is already installed or successfully installed during the execution.
-#               - 1 (NOK): If Fail2Ban cannot be installed.
+#               - 0 (OK): If both rsyslog and Fail2Ban are already installed or successfully installed during execution.
+#               - 1 (NOK): If either rsyslog or Fail2Ban cannot be installed.
 #
 ###
 check_prerequisites_add_fail2ban() {
+
+  # install rsyslog package
+  if ! install_package "rsyslog"; then
+    return "$NOK"
+  fi
+
   # install fail2ban package
   if ! install_package "fail2ban"; then
     return "$NOK"
   fi
+
+  local max_attempts=3
+  local attempt=1
+
+  # Check if fail2ban service is active, if not try to reconfigure and restart
+  while ! systemctl is-active --quiet fail2ban; do
+    if (( attempt > max_attempts )); then
+      log_error "Failed to activate fail2ban service after $max_attempts attempts."
+      return "$NOK"
+    fi
+
+    log_info "Fail2Ban service not active, attempting to reconfigure (Attempt $attempt/$max_attempts)."
+    dpkg-reconfigure fail2ban
+
+    # Increment the attempt counter
+    ((attempt++))
+  done
 
   return "$OK"
 }
@@ -928,12 +962,22 @@ run_action_add_fail2ban() {
 
     log_info "Configuring Fail2Ban with basic settings in jail.local."
 
+    # Default configuration
     echo '[DEFAULT]' | sudo tee $jail_local
-    echo 'bantime = 10m' | sudo tee -a $jail_local
-    echo 'findtime = 10m' | sudo tee -a $jail_local
-    echo 'maxretry = 5' | sudo tee -a $jail_local
+    echo 'bantime=10m' | sudo tee -a $jail_local
+    echo 'findtime=10m' | sudo tee -a $jail_local
+    echo 'maxretry=5' | sudo tee -a $jail_local
 
-    log_info "Fail2Ban configuration successfully written to $jail_local."
+    # SSH specific configuration
+    echo "" | sudo tee -a $jail_local
+    echo '[sshd]' | sudo tee -a $jail_local
+    echo 'enabled=true' | sudo tee -a $jail_local
+    echo 'port=ssh' | sudo tee -a $jail_local
+    echo 'filter=sshd' | sudo tee -a $jail_local
+    echo 'logpath=/var/log/auth.log' | sudo tee -a $jail_local
+    echo 'maxretry=5' | sudo tee -a $jail_local
+
+    log_info "SSH Fail2Ban configuration successfully added to $jail_local."
 }
 
 ### Post Actions for Fail2Ban Configuration
@@ -971,132 +1015,3 @@ post_actions_add_fail2ban() {
 
 # Run the task to add fail2ban and configure
 task_add_fail2ban
-#-------------- network/ssh_deactivate_root.sh - andatory
-
-# shellcheck source=/dev/null
-
-### Task to Deactivate Root SSH Login
-#
-# Function..........: task_ssh_deactivate_root
-# Description.......: Executes a series of steps to deactivate root SSH login. The function checks prerequisites, 
-#                     executes the main action to modify SSH settings, and performs any necessary post-actions. 
-#                     This task is crucial for enhancing the security of the SSH service.
-# Parameters........: 
-#               - None directly. The function uses predefined local variables for task name, root requirement, 
-#                     prerequisites, actions, post-actions, and task type.
-# Returns...........: 
-#               - 0 (OK): If all steps are successfully executed.
-#               - 1 (NOK): If any step in the process fails.
-#
-###
-task_ssh_deactivate_root() {
-
-  # Deactivate root SSH login
-  local name="ssh_deactivate_root"
-  local isRootRequired=true
-  local prereq="check_prerequisites_$name"
-  local actions="run_action_$name"
-  local postActions="post_actions_$name"
-  local task_type="andatory"
-
-  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
-    log_error "SSH root deactivation failed."
-    return "$NOK"
-  fi
-
-  log_info "Root SSH login has been successfully deactivated."
-  
-  return "$OK"
-}
-
-### Check Prerequisites for Deactivating Root SSH
-#
-# Function..........: check_prerequisites_ssh_deactivate_root
-# Description.......: Ensures that all prerequisites for deactivating root SSH login are met. This function primarily 
-#                     checks for the installation of the SSH package and installs it if not already present.
-# Returns...........: 
-#               - 0 (OK): If the SSH package is installed or successfully installed.
-#               - 1 (NOK): If the installation of the SSH package fails.
-#
-###
-check_prerequisites_ssh_deactivate_root() {
-
-  # install ssh package
-  if ! install_package "ssh"; then
-    return "$NOK"
-  fi
-
-  return "$OK"
-}
-
-### Run Action to Deactivate Root SSH Login
-#
-# Function..........: run_action_ssh_deactivate_root
-# Description.......: Modifies the SSH daemon configuration to deactivate root login. It checks the current 
-#                     setting of 'PermitRootLogin' in the sshd_config file. If it's set to 'yes', the function 
-#                     changes it to 'no'. If the setting is absent or set to any other value, it adds 'PermitRootLogin no'.
-#                     After modifying the configuration, it restarts the SSH service to apply changes.
-# Parameters........: None. Relies on global variables such as 'sshd_config'.
-# Returns...........: The return status of the 'execute_task' function, which executes the actions and configurations.
-#
-###
-run_action_ssh_deactivate_root() {
-
-  local sshd_config="/etc/ssh/sshd_config"
-
-  log_info "Checking SSH configuration for PermitRootLogin setting."
-
-  # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
-  if grep -q "^PermitRootLogin yes" "$sshd_config"; then
-    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
-    # If it exists and is set to 'yes', replace it with 'no'
-    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
-  else
-    log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
-    # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
-    echo 'PermitRootLogin no' | tee -a $sshd_config
-  fi
-
-  return "$OK"
-}
-
-### Post Actions for Deactivating Root SSH
-#
-# Function..........: post_actions_ssh_deactivate_root
-# Description.......: Performs post-action tasks after modifying SSH configuration to deactivate root login.
-#                     This primarily involves restarting the SSH service to apply the changes made to the configuration.
-#                     It checks if the SSH service is active and then attempts to restart it.
-# Returns...........: 
-#               - 0 (OK): If the SSH service is successfully restarted.
-#               - 1 (NOK): If the SSH service is not active or fails to restart.
-#
-###
-post_actions_ssh_deactivate_root() {
-  log_info "Restarting SSH service to apply changes."
-
-  # Using systemctl to restart the SSH service
-  if systemctl is-active --quiet ssh; then
-
-    systemctl restart sshd
-
-    if [ $? -eq 0 ]; then
-      log_info "SSH service restarted successfully."
-      
-    else
-      log_error "Failed to restart SSH service."
-      return "$NOK"
-
-    fi
-
-  else
-    log_error "SSH service is not active."
-    return "$NOK"
-
-  fi
-
-  return "$OK"
-}
-
-
-# Run the task to deactivate root SSH login
-task_ssh_deactivate_root

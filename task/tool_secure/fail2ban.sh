@@ -38,22 +38,46 @@ task_add_fail2ban() {
   return "$OK"
 }
 
-### Check Prerequisites for Fail2Ban Installation
+### Check Prerequisites for Fail2Ban and Rsyslog Installation
 #
-# Function..........: check_prerequisites_fail2ban
-# Description.......: Verifies if the Fail2Ban package is installed on the system. If not, it attempts to 
-#                     install Fail2Ban. Fail2Ban is an intrusion prevention software framework that protects 
-#                     computer servers from brute-force attacks.
+# Function..........: check_prerequisites_add_fail2ban
+# Description.......: Ensures that both 'rsyslog' and 'fail2ban' packages are installed on the system. 
+#                     'rsyslog' is used for system logging, and its presence is crucial for Fail2Ban to monitor logs. 
+#                     'fail2ban' is an intrusion prevention software framework that protects computer servers from brute-force attacks.
+#                     The function attempts to install these packages if they are not already present.
 # Returns...........: 
-#               - 0 (OK): If Fail2Ban is already installed or successfully installed during the execution.
-#               - 1 (NOK): If Fail2Ban cannot be installed.
+#               - 0 (OK): If both rsyslog and Fail2Ban are already installed or successfully installed during execution.
+#               - 1 (NOK): If either rsyslog or Fail2Ban cannot be installed.
 #
 ###
 check_prerequisites_add_fail2ban() {
+
+  # install rsyslog package
+  if ! install_package "rsyslog"; then
+    return "$NOK"
+  fi
+
   # install fail2ban package
   if ! install_package "fail2ban"; then
     return "$NOK"
   fi
+
+  local max_attempts=3
+  local attempt=1
+
+  # Check if fail2ban service is active, if not try to reconfigure and restart
+  while ! systemctl is-active --quiet fail2ban; do
+    if (( attempt > max_attempts )); then
+      log_error "Failed to activate fail2ban service after $max_attempts attempts."
+      return "$NOK"
+    fi
+
+    log_info "Fail2Ban service not active, attempting to reconfigure (Attempt $attempt/$max_attempts)."
+    dpkg-reconfigure fail2ban
+
+    # Increment the attempt counter
+    ((attempt++))
+  done
 
   return "$OK"
 }
@@ -74,12 +98,22 @@ run_action_add_fail2ban() {
 
     log_info "Configuring Fail2Ban with basic settings in jail.local."
 
+    # Default configuration
     echo '[DEFAULT]' | sudo tee $jail_local
-    echo 'bantime = 10m' | sudo tee -a $jail_local
-    echo 'findtime = 10m' | sudo tee -a $jail_local
-    echo 'maxretry = 5' | sudo tee -a $jail_local
+    echo 'bantime=10m' | sudo tee -a $jail_local
+    echo 'findtime=10m' | sudo tee -a $jail_local
+    echo 'maxretry=5' | sudo tee -a $jail_local
 
-    log_info "Fail2Ban configuration successfully written to $jail_local."
+    # SSH specific configuration
+    echo "" | sudo tee -a $jail_local
+    echo '[sshd]' | sudo tee -a $jail_local
+    echo 'enabled=true' | sudo tee -a $jail_local
+    echo 'port=ssh' | sudo tee -a $jail_local
+    echo 'filter=sshd' | sudo tee -a $jail_local
+    echo 'logpath=/var/log/auth.log' | sudo tee -a $jail_local
+    echo 'maxretry=5' | sudo tee -a $jail_local
+
+    log_info "SSH Fail2Ban configuration successfully added to $jail_local."
 }
 
 ### Post Actions for Fail2Ban Configuration

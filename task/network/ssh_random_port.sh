@@ -74,16 +74,25 @@ check_prerequisites_ssh_random_port() {
 #
 ###
 run_action_ssh_random_port() {
-  local prereq="Setting a random SSH port"
-  local name="Random SSH Port"
-  local random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
-  local actions="sudo sed -i 's/^#Port 22/Port $random_port/' /etc/ssh/sshd_config"
-  local configs="sudo service ssh restart"
+  local random_port
+  local user_response
 
-  execute_task "$prereq" "$name" "$actions" "$configs"
+  while true; do
+    random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
+    read -p "Use port $random_port for SSH? (y/n): " user_response
 
-  # Save the new SSH port to a file for reference
-  echo "SSH is now listening on port: $random_port" | sudo tee /etc/ssh/ssh_port_info.txt
+    case $user_response in
+      [Yy]* ) 
+        sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
+        log_info "SSH is now listening on port: $random_port"
+        break;;
+      [Nn]* ) 
+        log_debug "Skipping port $random_port."
+        continue;;
+      * ) 
+        echo "Please answer yes or no.";;
+    esac
+  done
 }
 
 ### Post Actions for SSH Random Port Configuration
@@ -113,6 +122,7 @@ post_actions_ssh_random_port() {
     log_error "SSH service is not active and cannot be restarted."
     return "$NOK"
   fi
+
 
   return "$OK"
 }

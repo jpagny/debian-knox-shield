@@ -12,5 +12,5 @@ mandatory|tool_secure/fail2ban.sh
 
 
 # End 
-andatory|network/ssh_deactivate_root.sh
+#andatory|network/ssh_deactivate_root.sh
 #mandatory|system/disable_root.sh

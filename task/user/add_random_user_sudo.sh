@@ -56,7 +56,7 @@ run_action_add_random_user_with_sudo_privileges() {
   username=$(ask_for_username_approval)
 
   # Use the useradd command to create the user with the encrypted password
-  adduser --gecos "" "$username" 
+  adduser --gecos "" "$username"
 
   # Add the user to the sudo group
   usermod -aG sudo "$username"
