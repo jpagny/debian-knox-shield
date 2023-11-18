@@ -503,11 +503,7 @@ done
 # Returns...........: 
 #               - 0 (OK): If the system update and upgrade complete successfully.
 #               - 1 (NOK): If the update and upgrade process fails.
-# Usage.............: This function is designed to be a part of a larger script or system setup routine. It should 
-#                     be called when it's necessary to ensure the system is up-to-date.
 # 
-# Example...........: `task_update_and_upgrade` to execute the system update and upgrade.
-#
 ###
 task_update_and_upgrade() {
 
@@ -566,6 +562,16 @@ task_configure_password_quality() {
   return "$OK"
 }
 
+### Check Prerequisites for Configuring Password Quality
+#
+# Function..........: check_prerequisites_configure_password_quality
+# Description.......: Verifies if the libpam-pwquality package is installed on the system. This package 
+#                     is necessary for enforcing password quality policies. If the package is not installed,
+#                     the script attempts to install it.
+# Returns...........: 
+#               - 0 (OK): If libpam-pwquality is already installed or successfully installed during the execution.
+#               - 1 (NOK): If libpam-pwquality cannot be installed.
+#
 check_prerequisites_configure_password_quality() {
   # install libpam-pwquality package
   if ! install_package "libpam-pwquality"; then
@@ -602,29 +608,29 @@ run_action_configure_password_quality() {
 
   local sshd_config="/etc/pam.d/common-password"
 
-  local enforcing=1
-  local retry=3                 # number of retries allowed if the password fails to meet the policy
-  local minLen=10               # minimum length for the new password
-  local difok=3                 # number of characters that must be different from the old password
-  local ucredit=-1              # required number of uppercase characters in the password
-  local lcredit=-1              # required number of lowercase characters in the password
-  local dcredit=-1              # required number of numeric digits in the password
-  local ocredit=-1              # required number of non-alphanumeric (special) characters in the password
-  local maxrepeat=3             # maximum number of allowed consecutive identical characters in the password
-  local gecoscheck="gecoscheck" # Enforces a check against the user's GECOS field to prevent using personal information in the password
+  # Define password quality parameters
+  local enforcing=1              # Ensure the policy is enforced
+  local retry=3                  # Number of retries for password entry
+  local minLen=10                # Minimum length of the password
+  local difok=3                  # Number of characters different from the old password
+  local ucredit=-1               # Number of required uppercase characters
+  local lcredit=-1               # Number of required lowercase characters
+  local dcredit=-1               # Number of required digit characters
+  local ocredit=-1               # Number of required special characters
+  local maxrepeat=3              # Maximum number of consecutive identical characters
+  local gecoscheck="gecoscheck"  # Check against the user's GECOS field
 
+  # Form the new pam_pwquality line with the defined parameters
   local pam_pwquality_line="password required pam_pwquality.so enforcing=$enforcing enforce_for_root retry=$retry minlen=$minLen difok=$difok ucredit=$ucredit lcredit=$lcredit dcredit=$dcredit ocredit=$ocredit maxrepeat=$maxrepeat $gecoscheck"
 
-  # Modification du fichier common-password
+  # Modify the common-password file based on the existence of pam_pwquality.so
   if grep -q "pam_pwquality.so" "$sshd_config"; then
-    # Remplace la ligne existante
-    log_info "iciii"
+    # Replace the existing pam_pwquality.so line
     sed -i "s/^password.*pam_pwquality.so.*/$pam_pwquality_line/" "$sshd_config"
   else
-    # Utilise awk pour ajouter la nouvelle ligne juste avant 'pam_permit.so'
-    sed -i "/^password.*required.*pam_permit.so/i $pam_pwquality_line" "$sshd_config"
+    # Insert the new line before pam_unix.so
+    sed -i "/^password.*pam_unix.so.*/i $pam_pwquality_line" "$sshd_config"
   fi
-
 }
 
 # Run the task to configure password quality
@@ -1216,6 +1222,109 @@ post_actions_add_fail2ban() {
 
 # Run the task to add fail2ban and configure
 task_add_fail2ban
+#-------------- tool/delete_unnecessary_tools.sh - optional
+
+# shellcheck source=/dev/null
+
+### Delete Unnecessary Tools
+#
+# Function..........: task_delete_unnecessary_tools
+# Description.......: Executes a task to remove unnecessary tools from the system. 
+#                     This is typically done to improve system security by reducing the 
+#                     attack surface area. The task may include removing unused software, 
+#                     services, or features that are not required for the system's operation.
+#
+# Returns...........: 
+#               - 0 (OK): If the task is completed successfully.
+#               - 1 (NOK): If the task fails.
+#
+##
+task_delete_unnecessary_tools() {
+  
+  local name="delete_unnecessary_tools"
+  local isRootRequired=true
+  local prereq=""
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="optional"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "xxxx failed."
+    return "$NOK"
+  fi
+
+  log_info "xxxx has been successfully xxxxx."
+  
+  return "$OK"
+}
+
+### Run Action to Delete Unnecessary Tools
+#
+# Function..........: run_action_delete_unnecessary_tools
+# Description.......: Executes the removal of specified unnecessary tools from the system. 
+#                     This is aimed at enhancing system security by removing potentially 
+#                     vulnerable or unused software.
+#
+# Parameters........: None
+# Returns...........: 
+#               - 0 (OK): If all specified packages are either successfully removed or were not installed.
+#               - Non-zero value: If there's an error in removing any of the packages.
+#
+##
+run_action_delete_unnecessary_tools() {
+
+    # Define a list of unnecessary packages to be removed
+    local packages=("telnet" "nis" "ntpdate")
+
+    # Loop through each package and remove it if installed
+    for pkg in "${packages[@]}"; do
+        if dpkg -l "$pkg" | grep -qw "^ii"; then
+            log_info "Removing $pkg..."
+            apt-get -y --purge remove "$pkg" >/dev/null 2>&1
+            if [ $? -eq 0 ]; then
+                log_info "$pkg removed successfully."
+            else
+                log_error "Failed to remove $pkg."
+            fi
+        else
+            log_info "$pkg is not installed or already removed."
+        fi
+    done
+
+    return "$OK"
+}
+
+### Post-Action Checks for Deleting Unnecessary Tools
+#
+# Function..........: post_actions_delete_unnecessary_tools
+# Description.......: Performs post-action checks to confirm the removal of unnecessary tools from the system.
+#                     This function iterates through a predefined list of packages and verifies whether they
+#                     have been successfully removed.
+#
+# Parameters........: None
+# Returns...........: 
+#               - 0 (OK): If all checks are completed successfully.
+#               - Non-zero value: If any error occurs during the checks.
+##
+post_actions_delete_unnecessary_tools() {
+
+    # Define a list of packages to check
+    local packages=("telnet" "nis" "ntpdate")
+
+    # Loop through each package and check if it has been removed
+    for pkg in "${packages[@]}"; do
+        if dpkg -l "$pkg" | grep -qw "^ii"; then
+            log_warn "$pkg is not removed."
+        else
+            log_info "$pkg is removed."
+        fi
+    done
+
+    return "$OK"
+}
+
+# Run the task to delete unnecessary tools
+task_delete_unnecessary_tools
 #-------------- tool/vim.sh - optional
 # shellcheck source=/dev/null
 
