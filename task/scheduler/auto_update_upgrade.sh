@@ -63,21 +63,28 @@ check_prerequisites_sheduler_auto_update_upgrade() {
 ###
 run_action_sheduler_auto_update_upgrade() {
 
+   # Create backup directory if it doesn't exist
+    local backup_dir="/etc/apt/backup"
+    if [ ! -d "$backup_dir" ]; then
+        log_info "Creating backup directory at $backup_dir."
+        mkdir -p "$backup_dir"
+    fi
+
     # Configure unattended-upgrades
     log_info "Configuring automatic updates..."
-    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/apt.conf.d/50unattended-upgrades.backup
+    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/backup/50unattended-upgrades.backup
     sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
     sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
 
     # Enable automatic updates
     log_info "Activating automatic updates and upgrades..."
-    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/apt.conf.d/20auto-upgrades.backup
+    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/backup/20auto-upgrades.backup
     echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
     echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
 
     # Test the configuration
     log_debug "Testing the automatic update configuration..."
-    unattended-upgrades --dry-run --debug
+    unattended-upgrades --dry-run --debug &> /dev/null
 
     log_info "Configuration complete."
 }

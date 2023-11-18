@@ -53,7 +53,7 @@ install_package(){
   fi
 
   # Check if the package is already installed using dpkg
-  if dpkg -l "$package" &> /dev/null; then
+  if dpkg -l "$package" | grep -qw "^ii"; then
     log_info "$package is already installed."
     return "$OK"
   else

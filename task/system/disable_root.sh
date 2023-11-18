@@ -56,19 +56,8 @@ prerequisite_system_disable_root() {
     sudoers_count=$(getent group sudo | cut -d: -f4 | tr ',' ' ' | wc -w)
 
     if [[ $sudoers_count -eq 0 ]]; then
-        log_warn "No users with sudo privileges found. Disabling root may lock out administrative access."
-
-        read -rp "Are you sure you want to continue? (y/N): " confirmation
-        case "$confirmation" in
-            [Yy]* )
-                log_info "Proceeding with root account deactivation."
-                return "$OK"
-                ;;
-            * )
-                log_error "Root deactivation aborted. No sudoers available."
-                return "$NOK"
-                ;;
-        esac
+        log_error "No users with sudo privileges found. Disabling root may lock out administrative access."
+        return "$NOK"
     fi
 
     log_info "Sudoers available. Safe to proceed with root deactivation."
