@@ -18,11 +18,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 # Returns...........: 
 #               - 0 (OK): If the system update and upgrade complete successfully.
 #               - 1 (NOK): If the update and upgrade process fails.
-# Usage.............: This function is designed to be a part of a larger script or system setup routine. It should 
-#                     be called when it's necessary to ensure the system is up-to-date.
 # 
-# Example...........: `task_update_and_upgrade` to execute the system update and upgrade.
-#
 ###
 task_update_and_upgrade() {
 
