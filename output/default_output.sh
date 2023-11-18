@@ -529,6 +529,106 @@ task_update_and_upgrade() {
 
 # Run the update and upgrade task
 task_update_and_upgrade
+#-------------- system/configure_password_quality.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Configure Password Quality Standards
+#
+# Function..........: task_configure_password_quality
+# Description.......: Executes a task to enhance the password quality standards on the system. 
+#                     This task aims to set strict password policies to improve system security. 
+#                     The function checks prerequisites, executes the main action to adjust password quality settings, 
+#                     and handles any necessary post-action steps.
+# Parameters........: 
+#               - None
+# Returns...........: 
+#               - 0 (OK): If the password quality standards are successfully configured.
+#               - 1 (NOK): If the configuration process fails.
+#
+###
+task_configure_password_quality() {
+  
+  local name="configure_password_quality"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Configuration of password quality standards failed."
+    return "$NOK"
+  fi
+
+  log_info "Password quality standards have been successfully configured."
+  
+  return "$OK"
+}
+
+check_prerequisites_configure_password_quality() {
+  # install libpam-pwquality package
+  if ! install_package "libpam-pwquality"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Enhance Password Security
+#
+# Function..........: run_action_configure_password_quality
+# Description.......: Configures password quality requirements using the pam_pwquality module. 
+#                     This function sets various parameters to enforce strong password policies, 
+#                     such as minimum length, character diversity, and complexity.
+#                     It modifies the /etc/pam.d/common-password file to apply these settings.
+# Parameters........: 
+#               - None
+# Local Variables...:
+#               - retry: The number of attempts a user has to enter a compliant password.
+#               - minLen: The minimum length required for the password.
+#               - difok: The number of characters that must be different from the old password.
+#               - ucredit: The requirement for uppercase characters in the password.
+#               - lcredit: The requirement for lowercase characters in the password.
+#               - dcredit: The requirement for numeric digits in the password.
+#               - ocredit: The requirement for non-alphanumeric (special) characters in the password.
+#               - maxrepeat: The maximum number of consecutive identical characters allowed in the password.
+#               - gecoscheck: Enforces a check against the user's GECOS field to prevent using personal information in the password.
+# Returns...........: 
+#               - 0 (OK): If the password policy is successfully applied.
+#
+###
+run_action_configure_password_quality() {
+
+  local sshd_config="/etc/pam.d/common-password"
+
+  local enforcing=1
+  local retry=3                 # number of retries allowed if the password fails to meet the policy
+  local minLen=10               # minimum length for the new password
+  local difok=3                 # number of characters that must be different from the old password
+  local ucredit=-1              # required number of uppercase characters in the password
+  local lcredit=-1              # required number of lowercase characters in the password
+  local dcredit=-1              # required number of numeric digits in the password
+  local ocredit=-1              # required number of non-alphanumeric (special) characters in the password
+  local maxrepeat=3             # maximum number of allowed consecutive identical characters in the password
+  local gecoscheck="gecoscheck" # Enforces a check against the user's GECOS field to prevent using personal information in the password
+
+  local pam_pwquality_line="password required pam_pwquality.so enforcing=$enforcing enforce_for_root retry=$retry minlen=$minLen difok=$difok ucredit=$ucredit lcredit=$lcredit dcredit=$dcredit ocredit=$ocredit maxrepeat=$maxrepeat $gecoscheck"
+
+  # Modification du fichier common-password
+  if grep -q "pam_pwquality.so" "$sshd_config"; then
+    # Remplace la ligne existante
+    log_info "iciii"
+    sed -i "s/^password.*pam_pwquality.so.*/$pam_pwquality_line/" "$sshd_config"
+  else
+    # Utilise awk pour ajouter la nouvelle ligne juste avant 'pam_permit.so'
+    sed -i "/^password.*required.*pam_permit.so/i $pam_pwquality_line" "$sshd_config"
+  fi
+
+}
+
+# Run the task to configure password quality
+task_configure_password_quality
 #-------------- system/secure_sensible_file_permissions.sh - mandatory
 
 # shellcheck source=/dev/null
@@ -550,7 +650,7 @@ task_secure_sensible_file_permissions() {
   
   local name="secure_sensible_file_permissions"
   local isRootRequired=true
-  local prereq=""
+  local prereq="check_prerequisites_$name"
   local actions="run_action_$name"
   local postActions=""
   local task_type="mandatory"
@@ -564,6 +664,17 @@ task_secure_sensible_file_permissions() {
   
   return "$OK"
 }
+
+
+check_prerequisites_secure_sensible_file_permissions(){
+
+  # install jq package
+  if ! install_package "sudo"; then
+    return "$NOK"
+  fi
+
+}
+
 
 ### Set Secure File Permissions
 #

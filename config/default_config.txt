@@ -1,5 +1,6 @@
 # Manage system
 mandatory|system/update_and_upgrade.sh
+mandatory|system/configure_password_quality.sh
 mandatory|system/secure_sensible_file_permissions.sh
 
 # Manage user

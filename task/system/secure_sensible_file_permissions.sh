@@ -24,7 +24,7 @@ task_secure_sensible_file_permissions() {
   
   local name="secure_sensible_file_permissions"
   local isRootRequired=true
-  local prereq=""
+  local prereq="check_prerequisites_$name"
   local actions="run_action_$name"
   local postActions=""
   local task_type=""
@@ -38,6 +38,17 @@ task_secure_sensible_file_permissions() {
   
   return "$OK"
 }
+
+
+check_prerequisites_secure_sensible_file_permissions(){
+
+  # install jq package
+  if ! install_package "sudo"; then
+    return "$NOK"
+  fi
+
+}
+
 
 ### Set Secure File Permissions
 #
