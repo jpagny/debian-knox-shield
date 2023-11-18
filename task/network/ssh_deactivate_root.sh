@@ -78,15 +78,17 @@ run_action_ssh_deactivate_root() {
 
   log_info "Checking SSH configuration for PermitRootLogin setting."
 
-  # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
-  if grep -q "^PermitRootLogin yes" "$sshd_config"; then
-    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
-    # If it exists and is set to 'yes', replace it with 'no'
-    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
+  # Check if PermitRootLogin is set to 'no' or 'yes'
+  if grep -q "^PermitRootLogin no" "$sshd_config"; then
+      log_info "PermitRootLogin is already set to 'no'. No changes needed."
+  elif grep -q "^PermitRootLogin yes" "$sshd_config"; then
+      log_info "PermitRootLogin set to 'yes'. Changing to 'no'."
+      # If it exists and is set to 'yes', replace it with 'no'
+      sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' "$sshd_config"
   else
-    log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
-    # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
-    echo 'PermitRootLogin no' | tee -a $sshd_config
+      log_info "PermitRootLogin is not set. Adding 'PermitRootLogin no'."
+      # If 'PermitRootLogin' is not set to either 'yes' or 'no', add 'PermitRootLogin no' to the file
+      echo 'PermitRootLogin no' | tee -a "$sshd_config"
   fi
 
   return "$OK"

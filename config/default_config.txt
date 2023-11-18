@@ -1,17 +1,22 @@
-# System
+# Manage system
 mandatory|system/update_and_upgrade.sh
-mandatory|user/add_random_user_sudo.sh
-mandatory|scheduler/auto_update_upgrade.sh
+mandatory|system/secure_sensible_file_permissions.sh
 
-# Network
+# Manage user
+mandatory|user/add_random_user_sudo.sh
+
+# Manage network
 mandatory|network/ssh_random_port.sh
 
-# Tools Related to Security
+# Manage scheduler
+mandatory|scheduler/auto_update_upgrade.sh
+
+# Manage tools related to security
 mandatory|tool_secure/fail2ban.sh
 
-# Variety of tools
+# Manage variety of tools
 optional|tool/vim.sh
 
 # End 
-andatory|network/ssh_deactivate_root.sh
+mandatory|network/ssh_deactivate_root.sh
 mandatory|system/disable_root.sh

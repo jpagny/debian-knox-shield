@@ -529,6 +529,90 @@ task_update_and_upgrade() {
 
 # Run the update and upgrade task
 task_update_and_upgrade
+#-------------- system/secure_sensible_file_permissions.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Secure and Sensible File Permissions
+#
+# Function..........: task_secure_sensible_file_permissions
+# Description.......: Ensures that file permissions across the system are set in a secure and sensible manner. 
+#                     This task involves checking prerequisites, executing the main action to adjust file permissions, 
+#                     and handling any necessary post-action steps. It aims to balance security needs with functional requirements.
+# Parameters........: 
+#               - None
+# Returns...........: 
+#               - 0 (OK): If the file permissions are successfully secured and sensibly set.
+#               - 1 (NOK): If the process fails to complete successfully.
+#
+###
+task_secure_sensible_file_permissions() {
+  
+  local name="secure_sensible_file_permissions"
+  local isRootRequired=true
+  local prereq=""
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Securing and setting sensible file permissions failed."
+    return "$NOK"
+  fi
+
+  log_info "File permissions have been securely and sensibly configured."
+  
+  return "$OK"
+}
+
+### Set Secure File Permissions
+#
+# Function..........: run_action_xxxx
+# Description.......: Applies a series of ownership and permission changes to critical system files and directories. 
+#                     These changes are intended to enhance system security by restricting write and execute access 
+#                     to essential system configuration files and directories.
+#                     The function modifies permissions for GRUB configuration, user home directories, system critical files 
+#                     like /etc/passwd, /etc/group, cron directories, sudoers configuration, SSH configuration, and more.
+# Returns...........: 
+#               - 0 (OK): If all changes are successfully applied.
+#               - 1 (NOK): If any of the changes fail to apply.
+#
+###
+run_action_secure_sensible_file_permissions() {
+
+  chown root:root /etc/grub.conf >/dev/null 2>&1
+  chown -R root:root /etc/grub.d >/dev/null 2>&1
+  chown root:root /boot/grub2/grub.cfg >/dev/null 2>&1
+
+  chmod og-rwx /etc/grub.conf >/dev/null 2>&1
+  chmod og-rwx /etc/grub.conf >/dev/null 2>&1
+  chmod -R og-rwx /etc/grub.d >/dev/null 2>&1
+  chmod og-rwx /boot/grub2/grub.cfg >/dev/null 2>&1
+  chmod og-rwx /boot/grub/grub.cfg >/dev/null 2>&1
+  chmod 0700 /home/* >/dev/null 2>&1
+  chmod 0644 /etc/passwd
+  chmod 0644 /etc/group
+  chmod -R 0600 /etc/cron.hourly
+  chmod -R 0600 /etc/cron.daily
+  chmod -R 0600 /etc/cron.weekly
+  chmod -R 0600 /etc/cron.monthly
+  chmod -R 0600 /etc/cron.d
+  chmod -R 0600 /etc/crontab
+  chmod -R 0600 /etc/shadow
+  chmod 750 /etc/sudoers.d
+  chmod -R 0440 /etc/sudoers.d/*
+  chmod 0600 /etc/ssh/sshd_config
+  chmod 0750 /usr/bin/w
+  chmod 0750 /usr/bin/who
+  chmod 0700 /etc/sysctl.conf
+  chmod 644 /etc/motd
+  chmod 0600 /boot/System.map-* >/dev/null 2>&1
+
+  return "$OK"
+}
+
+# Run the task to xxxx
+task_secure_sensible_file_permissions
 #-------------- user/add_random_user_sudo.sh - mandatory
 
 # shellcheck source=/dev/null
@@ -656,95 +740,6 @@ ask_for_username_approval() {
 
 # Run the task to add a new user with sudo
 task_add_random_user_with_sudo_privileges
-#-------------- scheduler/auto_update_upgrade.sh - mandatory
-# shellcheck source=/dev/null
-
-### Task for Setting Up Automatic System Update and Upgrade Scheduler
-#
-# Function..........: task_scheduler_auto_update_upgrade
-# Description.......: Sets up a scheduler for automatically updating and upgrading the system at regular intervals. 
-#                     This task automates the process of keeping the system up-to-date with the latest packages 
-#                     and security updates.
-# Parameters........: 
-#               - None directly. The function uses predefined local variables for task name, root requirement,
-#                     prerequisites, actions, post-actions, and task type.
-# Returns...........: 
-#               - 0 (OK): If the scheduler is successfully set up.
-#               - 1 (NOK): If setting up the scheduler fails.
-#
-###
-task_sheduler_auto_update_upgrade() {
-
-  local name="sheduler_auto_update_upgrade"
-  local isRootRequired=true
-  local prereq="check_prerequisites_$name"
-  local actions="run_action_$name"
-  local postActions=""
-  local task_type="mandatory"
-
-  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
-    log_error "Failed to set up automatic update and upgrade scheduler."
-    return "$NOK"
-  fi
-
-  log_info "Automatic update and upgrade scheduler successfully set up."
-  
-  return "$OK"
-}
-
-check_prerequisites_sheduler_auto_update_upgrade() {
-
-  # install ssh package
-  if ! install_package "unattended-upgrades"; then
-    return "$NOK"
-  fi
-
-  return "$OK"
-}
-
-### Run Action to Configure Automatic System Update and Upgrade
-#
-# Function..........: run_action_scheduler_auto_update_upgrade
-# Description.......: Configures the system to perform automatic updates and upgrades using unattended-upgrades. 
-#                     This function first configures the necessary parameters in the unattended-upgrades 
-#                     configuration file. It then sets up automatic update checks and enables automatic upgrades 
-#                     by modifying the apt configuration. A backup of the original configuration files is created 
-#                     before any changes are made. Additionally, the function performs a dry run to test the 
-#                     configuration.
-# Parameters........: None. The function uses predefined file paths and configurations.
-# Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
-#
-###
-run_action_sheduler_auto_update_upgrade() {
-
-   # Create backup directory if it doesn't exist
-    local backup_dir="/etc/apt/backup"
-    if [ ! -d "$backup_dir" ]; then
-        log_info "Creating backup directory at $backup_dir."
-        mkdir -p "$backup_dir"
-    fi
-
-    # Configure unattended-upgrades
-    log_info "Configuring automatic updates..."
-    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/backup/50unattended-upgrades.backup
-    sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
-    sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
-
-    # Enable automatic updates
-    log_info "Activating automatic updates and upgrades..."
-    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/backup/20auto-upgrades.backup
-    echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
-    echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
-
-    # Test the configuration
-    log_debug "Testing the automatic update configuration..."
-    unattended-upgrades --dry-run --debug &> /dev/null
-
-    log_info "Configuration complete."
-}
-
-# Run the task to disable root account
-task_sheduler_auto_update_upgrade
 #-------------- network/ssh_random_port.sh - mandatory
 
 # shellcheck source=/dev/null
@@ -872,6 +867,95 @@ post_actions_ssh_random_port() {
 
 # Run the task to set a random SSH port
 task_ssh_random_port
+#-------------- scheduler/auto_update_upgrade.sh - mandatory
+# shellcheck source=/dev/null
+
+### Task for Setting Up Automatic System Update and Upgrade Scheduler
+#
+# Function..........: task_scheduler_auto_update_upgrade
+# Description.......: Sets up a scheduler for automatically updating and upgrading the system at regular intervals. 
+#                     This task automates the process of keeping the system up-to-date with the latest packages 
+#                     and security updates.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If the scheduler is successfully set up.
+#               - 1 (NOK): If setting up the scheduler fails.
+#
+###
+task_sheduler_auto_update_upgrade() {
+
+  local name="sheduler_auto_update_upgrade"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Failed to set up automatic update and upgrade scheduler."
+    return "$NOK"
+  fi
+
+  log_info "Automatic update and upgrade scheduler successfully set up."
+  
+  return "$OK"
+}
+
+check_prerequisites_sheduler_auto_update_upgrade() {
+
+  # install ssh package
+  if ! install_package "unattended-upgrades"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Configure Automatic System Update and Upgrade
+#
+# Function..........: run_action_scheduler_auto_update_upgrade
+# Description.......: Configures the system to perform automatic updates and upgrades using unattended-upgrades. 
+#                     This function first configures the necessary parameters in the unattended-upgrades 
+#                     configuration file. It then sets up automatic update checks and enables automatic upgrades 
+#                     by modifying the apt configuration. A backup of the original configuration files is created 
+#                     before any changes are made. Additionally, the function performs a dry run to test the 
+#                     configuration.
+# Parameters........: None. The function uses predefined file paths and configurations.
+# Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
+#
+###
+run_action_sheduler_auto_update_upgrade() {
+
+   # Create backup directory if it doesn't exist
+    local backup_dir="/etc/apt/backup"
+    if [ ! -d "$backup_dir" ]; then
+        log_info "Creating backup directory at $backup_dir."
+        mkdir -p "$backup_dir"
+    fi
+
+    # Configure unattended-upgrades
+    log_info "Configuring automatic updates..."
+    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/backup/50unattended-upgrades.backup
+    sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+    sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+
+    # Enable automatic updates
+    log_info "Activating automatic updates and upgrades..."
+    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/backup/20auto-upgrades.backup
+    echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+    echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+
+    # Test the configuration
+    log_debug "Testing the automatic update configuration..."
+    unattended-upgrades --dry-run --debug &> /dev/null
+
+    log_info "Configuration complete."
+}
+
+# Run the task to disable root account
+task_sheduler_auto_update_upgrade
 #-------------- tool_secure/fail2ban.sh - mandatory
 # shellcheck source=/dev/null
 
@@ -1077,7 +1161,7 @@ run_action_add_vim() {
 
 # Run the task to add vim
 task_add_vim
-#-------------- network/ssh_deactivate_root.sh - andatory
+#-------------- network/ssh_deactivate_root.sh - mandatory
 
 # shellcheck source=/dev/null
 
@@ -1103,7 +1187,7 @@ task_ssh_deactivate_root() {
   local prereq="check_prerequisites_$name"
   local actions="run_action_$name"
   local postActions="post_actions_$name"
-  local task_type="andatory"
+  local task_type="mandatory"
 
   if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
     log_error "SSH root deactivation failed."
@@ -1152,15 +1236,17 @@ run_action_ssh_deactivate_root() {
 
   log_info "Checking SSH configuration for PermitRootLogin setting."
 
-  # Check if PermitRootLogin exists in the sshd_config and is set to 'yes'
-  if grep -q "^PermitRootLogin yes" "$sshd_config"; then
-    log_info "PermitRootLogin set to 'yes'. Changing to 'no'.":
-    # If it exists and is set to 'yes', replace it with 'no'
-    sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' $sshd_config
+  # Check if PermitRootLogin is set to 'no' or 'yes'
+  if grep -q "^PermitRootLogin no" "$sshd_config"; then
+      log_info "PermitRootLogin is already set to 'no'. No changes needed."
+  elif grep -q "^PermitRootLogin yes" "$sshd_config"; then
+      log_info "PermitRootLogin set to 'yes'. Changing to 'no'."
+      # If it exists and is set to 'yes', replace it with 'no'
+      sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' "$sshd_config"
   else
-    log_info "PermitRootLogin not set to 'yes' or does not exist. Adding 'PermitRootLogin no'."
-    # If it doesn't exist or isn't set to 'yes', add 'PermitRootLogin no' to the file
-    echo 'PermitRootLogin no' | tee -a $sshd_config
+      log_info "PermitRootLogin is not set. Adding 'PermitRootLogin no'."
+      # If 'PermitRootLogin' is not set to either 'yes' or 'no', add 'PermitRootLogin no' to the file
+      echo 'PermitRootLogin no' | tee -a "$sshd_config"
   fi
 
   return "$OK"
