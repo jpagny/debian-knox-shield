@@ -192,7 +192,7 @@ ask_for_password_approval() {
 generate_strong_password() {
   # Generate a random password with a minimum length of 15 characters,
   # including alphanumeric and special characters
-  < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()_+{}|:<>?=' | head -c 15 ; echo
+  < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()_+{}|:<>?=' | head -c 20 ; echo
 }
 
 # Run the task to add a new user with sudo privileges
