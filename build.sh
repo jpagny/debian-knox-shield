@@ -136,4 +136,6 @@ append_scripts_from_directory "$CORE_DIR" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
 # Append task scripts
 append_scripts_from_config "$CONFIG_FILE" "$OUTPUT_DIR/$OUTPUT_SCRIPT"
 
+dos2unix $OUTPUT_DIR/$OUTPUT_SCRIPT
+
 echo "Build completed. All scripts are combined into $OUTPUT_SCRIPT."

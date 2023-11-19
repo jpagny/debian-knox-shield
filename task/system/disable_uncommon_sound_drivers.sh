@@ -83,10 +83,10 @@ run_action_disable_uncommon_sound_drivers() {
         log_error "Failed to disable uncommon sound drivers."
         # Optionally restore from backup
         [ -f "$backupFile" ] && mv "$backupFile" "$configFile"
-        return 1  # NOK
+        return "$NOK"
     else
         log_info "Uncommon sound drivers have been successfully disabled."
-        return 0  # OK
+        return "$OK"
     fi
 }
 

@@ -90,17 +90,17 @@ run_action_ufw_settings() {
     ufw default deny incoming
     ufw default deny outgoing
 
-    # Allow HTTP (port 80), 
-    ufw allow in on http port 80
-    ufw allow out on http port 80
+    # Allow HTTP (port 80)
+    ufw allow in 80/tcp
+    ufw allow out 80/tcp
 
-    # Allow HTTPS (port 443), and 
-    ufw allow in on https port 443
-    ufw allow out on https port 443
+    # Allow HTTPS (port 443)
+    ufw allow in 443/tcp
+    ufw allow out 443/tcp
 
     # Allow SSH port
-    ufw allow in on $ssh_port
-    ufw allow out on $ssh_port
+    ufw allow in $ssh_port/tcp
+    ufw allow out $ssh_port/tcp
 
     log_info "UFW has been configured: HTTPS and SSH ($ssh_port) are allowed; all other traffic is denied."
 
