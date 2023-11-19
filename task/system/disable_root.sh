@@ -52,7 +52,9 @@ task_system_disable_root() {
 #
 ###
 prerequisite_system_disable_root() {
+
     local sudoers_count
+    
     sudoers_count=$(getent group sudo | cut -d: -f4 | tr ',' ' ' | wc -w)
 
     if [[ $sudoers_count -eq 0 ]]; then
@@ -78,12 +80,18 @@ prerequisite_system_disable_root() {
 ###
 run_action_system_disable_root() {
 
-    local random_password=$(openssl rand -base64 48)
-    log_info "Generating a random password for root."
+  log_info "Generating a random password for root and locking the account."
 
-    echo "root:$random_password" | chpasswd
+  # Set a random password for root without echoing it
+  openssl rand -base64 48 | passwd --stdin root >/dev/null 2>&1
 
-    log_info "Root account password has been changed to a random value, effectively disabling direct root login."
+  # Lock the root account
+  passwd -l root >/dev/null 2>&1
+
+  # Change the root shell to nologin to prevent direct login
+  sed -i '/^root:/s#:/bin/bash#:/usr/sbin/nologin#' /etc/passwd
+
+  log_info "Root account has been secured and direct login disabled."
 }
 
 # Run the task to disable root account
