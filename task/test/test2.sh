@@ -7,36 +7,30 @@ source "$(dirname "$0")/../core/01_logger.sh"
 source "$(dirname "$0")/../core/02_execute_task.sh"
 source "$(dirname "$0")/../core/03_utils.sh"
 
-task_xxxx() {
+task_test2() {
   
-  local name="xxxx"
+  local name="test2"
   local isRootRequired=true
-  local prereq="check_prerequisites_$name"
+  local prereq=""
   local actions="run_action_$name"
-  local postActions="post_actions_$name"
+  local postActions=""
   local task_type=""
 
   if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
-    log_error "xxxx failed."
+    log_error "test2 failed."
     return "$NOK"
   fi
 
-  log_info "xxxx has been successfully xxxxx."
+  log_info "test2 has been successfully test2x."
   
   return "$OK"
 }
 
-check_prerequisites_xxxx() {
+
+run_action_test2() {
     return "$OK"
 }
 
-run_action_xxxx() {
-    return "$OK"
-}
 
-post_actions_xxxx() {
-    return "$OK"
-}
-
-# Run the task to xxxx
-task_xxxx
+# Run the task to test2
+task_test2
