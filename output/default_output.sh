@@ -2537,8 +2537,8 @@ run_action_system_disable_root() {
   # Lock the root account
   passwd -l root >/dev/null 2>&1
 
-  # Change the root shell to nologin to prevent direct login
-  sed -i '/^root:/s#:/bin/bash#:/usr/sbin/nologin#' /etc/passwd
+  # Change the root shell to nologin to prevent direct login / too dangerous ?
+  #sed -i '/^root:/s#:/bin/bash#:/usr/sbin/nologin#' /etc/passwd
 
   log_info "Root account has been secured and direct login disabled."
   
