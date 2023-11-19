@@ -53,7 +53,13 @@ check_prerequisites_add_knockd() {
 
     # Check if ufw is installed
     if ! command -v ufw >/dev/null 2>&1; then
-        echo "ufw must be installed"
+        log_error "ufw must be installed"
+        return "$NOK"
+    fi
+
+    # Check if ssh is installed
+    if ! install_package "ssh"; then
+    log_error "ssh must be installed"
         return "$NOK"
     fi
 
@@ -62,10 +68,24 @@ check_prerequisites_add_knockd() {
         return "$NOK"
     fi
 
-    # Remove all ufw rules related to SSH
-    local ssh_rules=$(ufw status numbered | grep 'SSH' | awk '{print $1}' | sed 's/\[//;s/\]//')
-    for rule in $ssh_rules; do
-        ufw delete $rule
+    local ssh_port=$(grep "^Port " "/etc/ssh/sshd_config" | cut -d ' ' -f2)
+
+    # Count the total number of lines
+    local total_lines=$(sudo ufw status numbered | wc -l)
+
+    # Loop from the last line to the first
+    for ((i=$total_lines; i>0; i--)); do
+        # Read line i
+        line=$(sudo ufw status numbered | tail -n +$i | head -n 1)
+        
+        # Check if the line contains the SSH port
+        if echo "$line" | grep -q "$ssh_port"; then
+          # Extract the rule number and remove the brackets
+          rule_num=$(echo "$line" | cut -d ']' -f 1 | tr -d '[')
+            
+          # Delete the corresponding rule
+          ufw --force delete "$rule_num"
+        fi
     done
 
     return "$OK"
@@ -128,14 +148,12 @@ run_action_add_knockd() {
         echo '[openSSH]'
         echo "        sequence    = $open_sequence"
         echo '        seq_timeout = 5'
-        echo "        command     = /sbin/iptables -A INPUT -s %IP% -p tcp --dport $ssh_port -j ACCEPT"
-        echo '        tcpflags    = syn'
+    echo "        command     = /sbin/iptables -C INPUT -s %IP% -p tcp --dport $ssh_port -j ACCEPT || /sbin/iptables -A INPUT -s %IP% -p tcp --dport $ssh_port -j ACCEPT"
         echo
         echo '[closeSSH]'
         echo "        sequence    = $close_sequence"
         echo '        seq_timeout = 5'
         echo "        command     = /sbin/iptables -D INPUT -s %IP% -p tcp --dport $ssh_port -j ACCEPT"
-        echo '        tcpflags    = syn'
       } > "$knockd_conf"
     fi
 
@@ -158,7 +176,7 @@ generate_knock_sequence() {
     local protocol=${protocols[$RANDOM % 2]}
     # Add the port and protocol to the sequence
     sequence+="${port}:${protocol}"
-    [ $i -lt $length ] && sequence+=" "
+    [ $i -lt $length ] && sequence+=","
   done
 
   echo $sequence

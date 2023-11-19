@@ -23,15 +23,13 @@ mandatory|network/ssh_random_port.sh
 mandatory|scheduler/auto_update_upgrade.sh
 
 # Manage tools related to security
+mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
 mandatory|tool_secure/knockd.sh
 
 # Manage variety of tools
 optional|tool/delete_unnecessary_tools.sh
 optional|tool/vim.sh
-
-# Manage firewall
-mandatory|firewall/ufw_settings.sh
 
 # End 
 mandatory|network/ssh_deactivate_root.sh
