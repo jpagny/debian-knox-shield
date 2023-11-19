@@ -98,11 +98,15 @@ run_action_ufw_settings() {
     ufw allow in 443/tcp
     ufw allow out 443/tcp
 
+    # Allow DNS port
+    ufw allow out 53
+    ufw allow in 53
+
     # Allow SSH port
     ufw allow in $ssh_port/tcp
     ufw allow out $ssh_port/tcp
 
-    log_info "UFW has been configured: HTTPS and SSH ($ssh_port) are allowed; all other traffic is denied."
+    log_info "UFW has been configured: HTTP, HTTPS, DNS AND SSH ($ssh_port) are allowed; all other traffic is denied."
 
     return "$OK"
 }
