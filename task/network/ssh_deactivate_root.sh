@@ -50,7 +50,7 @@ task_ssh_deactivate_root() {
 #               - 0 (OK): If the SSH package is installed or successfully installed.
 #               - 1 (NOK): If the installation of the SSH package fails.
 #
-###
+##
 check_prerequisites_ssh_deactivate_root() {
 
   # install ssh package
@@ -71,7 +71,7 @@ check_prerequisites_ssh_deactivate_root() {
 # Parameters........: None. Relies on global variables such as 'sshd_config'.
 # Returns...........: The return status of the 'execute_task' function, which executes the actions and configurations.
 #
-###
+##
 run_action_ssh_deactivate_root() {
 
   local sshd_config="/etc/ssh/sshd_config"
@@ -104,7 +104,7 @@ run_action_ssh_deactivate_root() {
 #               - 0 (OK): If the SSH service is successfully restarted.
 #               - 1 (NOK): If the SSH service is not active or fails to restart.
 #
-###
+##
 post_actions_ssh_deactivate_root() {
   log_info "Restarting SSH service to apply changes."
 
