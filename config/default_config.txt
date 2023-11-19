@@ -3,6 +3,16 @@ mandatory|system/update_and_upgrade.sh
 mandatory|system/configure_login_password.sh
 mandatory|system/configure_password_quality.sh
 mandatory|system/secure_sensible_file_permissions.sh
+mandatory|harden_kernel_settings.sh
+mandatory|harden_network_settings.sh
+mandatory|harden_file_system_settings.sh
+mandatory|disable_uncommon_file_system.sh
+mandatory|disable_uncommon_network_protocols.sh
+mandatory|disable_uncommon_network_interfaces.sh
+mandatory|disable_uncommon_sound_drivers.sh
+mandatory|disable_uncommon_input_drivers.sh
+mandatory|disable_uncommon_firewire.sh
+
 
 # Manage user
 mandatory|user/add_random_user_sudo.sh
