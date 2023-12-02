@@ -31,6 +31,9 @@ mandatory|tool_secure/knockd.sh
 optional|tool/delete_unnecessary_tools.sh
 optional|tool/vim.sh
 
+#Manage message
+optional|message/hello_world.sh
+
 # End 
 mandatory|network/ssh_deactivate_root.sh
 mandatory|system/disable_root.sh
