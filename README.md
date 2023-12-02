@@ -1,43 +1,56 @@
-# secure-post-install-debian
+# Debian knox shield
+
+![Debian Knox Shield Logo](debian-knox-shield-logo.png)
+
+**Secure your Debian server with ease**
+
+Debian knox shield is a robust and modular tool designed to enhance the security of your Debian server. This build script empowers users to secure their server environments effectively, integrating a suite of customizable scripts and security measures. With Debian Knox Shield, fortify your server against vulnerabilities and tailor the security to your specific needs.
 
 ## Description
-The `secure-post-install-debian` project provides a suite of scripts designed to automate the post-installation setup and configuration process for Debian-based systems. These scripts facilitate tasks such as system updates, user creation, and security configurations, ensuring a consistent and secure setup.
+
+Debian knox shield aims to provide comprehensive security solutions for Debian servers. It offers high modularity and customizability, allowing users to add and organize scripts according to their preference and execute them in a desired order.
+
+## Context
+
+I developed Debian Knox Shield after subscribing to a VPS server and realizing the scarcity of repositories offering post-installation Debian security scripts that were either not very modular or didn't meet my specific needs. This project is a personal journey into enhancing server security while learning and evolving in the field.
 
 ## Installation
-To get started with `secure-post-install-debian`, follow these steps:
 
-```bash
-# Clone the repository
-git clone https://github.com/yourrepository/secure-post-install-debian.git
+1. Clone the repository: `git clone https://github.com/jpagny/debian-knox-shield.git`
+2. Make the build script executable: `chmod +x build.sh`
+3. Execute the build script: `./build.sh`
 
-# Navigate to the project directory
-cd secure-post-install-debian
+## Project Structure
 
-Functions
-task_update_and_upgrade
-Automatically updates and upgrades the system packages. This task is essential to keep the system up-to-date with the latest security patches and software updates.
+- `config/` : Contains default configuration files with script procedures.
+- `core/`   : The core of the project. Modify only if you are certain of the changes.
+- `output/` : Contains the output script post-build, which should be executed on your server.
+- `task/`   : Holds all the scripts. Users can choose which to use, and add their own scripts to the configuration.
+- `tool/`   : Tools to assist in rapid script development.
 
-execute_and_check
-Executes given tasks with the option to mark them as 'mandatory' or 'optional'. In case of failure, 'mandatory' tasks will stop the script, while 'optional' tasks allow the script to continue.
+## Contributing
 
-append_scripts_from_config
-Reads a configuration file and appends the specified scripts to a target script file, which can then be executed as a single, consolidated script.
+We welcome contributions to Debian Knox Shield! If you're interested in helping out, please follow these steps:
 
-append_scripts_from_directory
-Combines all scripts from a specified directory into a single script file. This is useful for organizing multiple script files into a unified setup script.
+1. **Fork the Repository**: Create your own fork of the repository by clicking the "Fork" button on the GitHub page. This creates a copy of the project in your own GitHub account.
 
-Configuration
-Configure your setup by modifying the config_file.txt. Each line in this file specifies a script to include in the build process, categorized as 'mandatory' or 'optional'.
+2. **Clone Your Fork**: Clone your fork to your local machine (use `git clone https://github.com/your-username/debian-knox-shield.git`, replacing `your-username` with your GitHub username).
 
-Contributing
-Contributions to secure-post-install-debian are welcome! Feel free to fork the repository, make changes, and submit pull requests.
+3. **Create a New Branch**: Before making your changes, switch to a new branch in your local repository (e.g., `git checkout -b my-new-feature`).
 
-License
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+4. **Make Your Changes**: Implement the changes you want to make in your branch.
 
-Acknowledgments
-Special thanks to all contributors and users of the secure-post-install-debian project.
+5. **Commit Your Changes**: Commit your changes with descriptive commit messages (use `git commit -m "A brief description of the change"`).
 
-Contact Information
-For support or queries, please open an issue in the GitHub repository: https://github.com/yourrepository/secure-post-install-debian
+6. **Push to Your Fork**: Push your changes to your fork on GitHub (`git push origin my-new-feature`).
 
+7. **Submit a Pull Request**: Go to the original repository on GitHub, and you'll see a prompt to submit a pull request from your new branch. Click the "Compare & pull request" button and submit it with a clear description of your changes.
+
+Please ensure your code adheres to the existing style of the project to make the review process faster.
+
+Thank you for your contributions!
+
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE.txt) file for details.

@@ -11,7 +11,7 @@ need_prerequisites="$3"
 need_post_action="$4"
 
 # Define the task directory path
-task_dir="../task/$folder_name"
+task_dir="task/$folder_name"
 
 # Create the task directory if it doesn't exist
 mkdir -p "$task_dir"
@@ -25,8 +25,12 @@ if [ -e "$task_script_path" ]; then
   exit 1
 fi
 
-# Copy the template task script and customize it
-cp "template/task.sh" "$task_script_path"
+BASE_DIR=$(cd "$BASE_DIR"; pwd)
+TEMPLATE_PATH="$BASE_DIR/tool/template/task.sh"
+DEST_PATH="$BASE_DIR/$task_script_path"
+
+# Copy the template to the destination
+cp "$TEMPLATE_PATH" "$DEST_PATH"
 
 # Replace occurrences of "xxxx" with the task name
 sed -i "s/xxxx/$task_name/g" "$task_script_path"
