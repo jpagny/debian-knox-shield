@@ -13,12 +13,6 @@ Debian knox shield is a robust and modular tool designed to enhance the security
 
 I developed Debian Knox Shield after subscribing to a VPS server and realizing the scarcity of repositories offering post-installation Debian security scripts that were either not very modular or didn't meet my specific needs. This project is a personal journey into enhancing server security while learning and evolving in the field.
 
-## Installation
-
-1. Clone the repository: `git clone https://github.com/jpagny/debian-knox-shield.git`
-2. Make the build script executable: `chmod +x build.sh`
-3. Execute the build script: `./build.sh`
-
 ## Project Structure
 
 | Folder    | Under folder      | Description |
@@ -35,6 +29,12 @@ I developed Debian Knox Shield after subscribing to a VPS server and realizing t
 |           | `tool_secure/`    | Contains all tools and utilities specifically designed for enhancing server security. |
 |           | `user/`           | Contains all tasks and scripts related to user account management and permissions. |
 | `tool/`   |                   | Tools to assist in rapid script development. |
+
+## Installation
+
+1. Clone the repository: `git clone https://github.com/jpagny/debian-knox-shield.git`
+2. Make the build script executable: `chmod +x build.sh`
+3. Execute the build script: `./build.sh`
 
 
 ## How It Works
