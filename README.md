@@ -2,13 +2,12 @@
 
 ![Debian Knox Shield Logo](debian-knox-shield-logo.png)
 
-**Secure your Debian server with ease**
-
-Debian knox shield is a robust and modular tool designed to enhance the security of your Debian server. This build script empowers users to secure their server environments effectively, integrating a suite of customizable scripts and security measures. With Debian Knox Shield, fortify your server against vulnerabilities and tailor the security to your specific needs.
 
 ## Description
 
-Debian knox shield aims to provide comprehensive security solutions for Debian servers. It offers high modularity and customizability, allowing users to add and organize scripts according to their preference and execute them in a desired order.
+**Secure your Debian server with ease**
+
+Debian knox shield is a robust and modular tool designed to enhance the security of your Debian server. This build script empowers users to secure their server environments effectively, integrating a suite of customizable scripts and security measures. With Debian Knox Shield, fortify your server against vulnerabilities and tailor the security to your specific needs.
 
 ## Context
 
@@ -22,11 +21,22 @@ I developed Debian Knox Shield after subscribing to a VPS server and realizing t
 
 ## Project Structure
 
-- `config/` : Contains default configuration files with script procedures.
-- `core/`   : The core of the project. Modify only if you are certain of the changes.
-- `output/` : Contains the output script post-build, which should be executed on your server.
-- `task/`   : Holds all the scripts. Users can choose which to use, and add their own scripts to the configuration.
-- `tool/`   : Tools to assist in rapid script development.
+| Dossier   | Sous-Répertoire   | Description |
+| --------- | ----------------- | ----------- |
+| `config/` |                   | Contains default configuration files with tasks organized in the proper procedural order. |
+| `core/`   |                   | The core of the project. Modify only if you are certain of the changes. |
+| `output/` |                   | Contains the output script post-build, which should be executed on your server. |
+| `task/`   |                   | Holds all the scripts. Users can choose which to use, and add their own scripts to the configuration. |
+|           | `firewall/`       | Contains all tasks related to firewall management.  |
+|           | `network/`        | Contains all tasks related to network management and configuration. |
+|           | `scheduler/`      | Contains all tasks related to task scheduling and event management.|
+|           | `system/`         | Contains all tasks related to overall system management and configuration. |
+|           | `tool/`           | Contains all tools and utilities supporting script development and execution. |
+|           | `tool_secure/`    | Contains all tools and utilities specifically designed for enhancing server security. |
+|           | `user/`           | Contains all tasks and scripts related to user account management and permissions. |
+| `tool/`   |                   | Tools to assist in rapid script development. |
+
+
 
 ## Contributing
 
