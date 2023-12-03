@@ -27,15 +27,15 @@ task_xxxx() {
 }
 
 check_prerequisites_xxxx() {
-    return "$OK"
+  return "$OK"
 }
 
 run_action_xxxx() {
-    return "$OK"
+  return "$OK"
 }
 
 post_actions_xxxx() {
-    return "$OK"
+  return "$OK"
 }
 
 # Run the task to xxxx

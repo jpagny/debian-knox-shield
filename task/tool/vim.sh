@@ -50,7 +50,7 @@ task_add_vim() {
 ###
 run_action_add_vim() {
 
-# install rsyslog package
+# install vim package
   if ! install_package "vim"; then
     return "$NOK"
   fi
