@@ -134,3 +134,20 @@ ask_for_password_approval() {
     fi
   done
 }
+
+
+### Generate Strong Password
+#
+# Function..........: generate_strong_password
+# Description.......: Generates a strong, random password using system randomness sources.
+# Parameters........: None.
+# Returns...........: A string containing a randomly generated password.
+# Output............: The generated password (output to standard output).
+# Notes.............: The password includes alphanumeric characters and special characters,
+#                     ensuring a minimum length of 15 characters.
+##
+generate_strong_password() {
+  # Generate a random password with a minimum length of 15 characters,
+  # including alphanumeric and special characters
+  < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()_+{}|:<>?=' | head -c 20 ; echo
+}

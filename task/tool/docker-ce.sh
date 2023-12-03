@@ -110,36 +110,56 @@ check_prerequisites_add_docker-ce() {
 ### Run Action for Docker CE Installation and Configuration
 #
 # Function..........: run_action_add_docker-ce
-# Description.......: Secures the Docker installation by adding a non-root user to the Docker group. This function 
-#                     first attempts to find a non-root user with UID 1000 and asks for confirmation to add this user 
-#                     to the Docker group. If the user declines or no such user exists, it prompts for a username 
-#                     and adds the specified user to the Docker group, enhancing security by allowing Docker commands 
-#                     to be run without root privileges.
+# Description.......: Secures the Docker installation by creating a new non-root user and adding them to the Docker 
+#                     group. The function prompts for a new username and password, confirms the credentials with the user, 
+#                     creates the new user with the provided credentials, and adds them to the Docker group. It also 
+#                     ensures that the Docker group exists before adding the user to it.
 # Parameters........: 
-#               - None. The function interacts with the user for input when necessary.
+#               - None. The function uses interactive prompts to gather input for the new user's credentials.
 # Returns...........: 
-#               - 0 (OK): If a user is successfully added to the Docker group.
-#               - 1 (NOK): If the process fails, including user not existing or issues in modifying the Docker group.
+#               - 0 (OK): If a new user is successfully created and added to the Docker group.
+#               - 1 (NOK): If any part of the process fails, such as user creation or adding the user to the Docker group.
 ##
 run_action_add_docker-ce() {
 
   log_info "Securing the Docker installation..."
 
-  # Step 1: Get a new username
-  local new_user=$(ask_for_username_approval)
+  local new_user
+  local user_password
+  local confirmation
 
-  # Step 2: Get a password for the new user
-  local user_password=$(ask_for_password_approval)
+  while true; do
 
-  # Step 3: Create the user with the provided password
+    # Ask for username approval and capture the returned username
+    new_user=$(ask_for_username_approval)
+
+    # Ask for password approval and capture the returned password
+    user_password=$(ask_for_password_approval)
+    
+    # Is it safe to show credentials ? 
+    echo "Please make sure you have recorded this information safely:"
+    echo "Username: $new_user"
+    echo "Password: $user_password"
+
+    # Ask for confirmation
+    read -p "Have you saved the username and password? (y/n): " confirmation
+    if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
+      break
+    else
+      echo "Let's try again..."
+    fi
+
+  done
+
+  # Create the user with the provided password
   log_info "Creating user $new_user..."
-  useradd -m -p "$(openssl passwd -1 "$user_password")" "$new_user"
-  if [ $? -ne 0 ]; then
-    log_error "Failed to create user $new_user."
-    return "$NOK"
-  fi
+  # Use the useradd command to create the user without a password prompt
+  adduser --gecos "" --disabled-password "$new_user"
 
-  # Step 4: Add the new user to the Docker group
+  # Set the password for the user securely using chpasswd
+  echo "$new_user:$user_password" | chpasswd
+
+  # Add the new user to the Docker group
   # Create Docker user group, if not already exists
   if ! getent group docker > /dev/null; then
     groupadd docker
