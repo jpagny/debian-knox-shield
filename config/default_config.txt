@@ -1,4 +1,5 @@
 # Manage system
+mandatory|system/configure_adduser.sh
 mandatory|system/update_and_upgrade.sh
 mandatory|system/configure_login_password.sh
 mandatory|system/configure_password_quality.sh

@@ -57,6 +57,11 @@ task_add_docker-ce() {
 ##
 check_prerequisites_add_docker-ce() {
 
+  # install pwgen package
+  if ! install_package "pwgen"; then
+    return "$NOK"
+  fi
+
   # install apt-transport-https package
   if ! install_package "apt-transport-https"; then
     return "$NOK"
@@ -72,23 +77,24 @@ check_prerequisites_add_docker-ce() {
     return "$NOK"
   fi
 
-  # install software-properties-common package
-  if ! install_package "software-properties-common"; then
+  # install gnupg package
+  if ! install_package "gnupg"; then
     return "$NOK"
   fi
+
+  install -m 0755 -d /etc/apt/keyrings
 
   # Add Docker’s official GPG key
-  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-  # Verify the fingerprint
-  local fingerprint=$(apt-key fingerprint 0EBFCD88 | grep -c "9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88")
-  if [ "$fingerprint" -ne 1 ]; then
-    log_error "The GPG key fingerprint is not valid."
-    return "$NOK"
-  fi
+  chmod a+r /etc/apt/keyrings/docker.gpg
 
-  # Set up the stable repository
-  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  # Add the repository to Apt sources:
+  echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+    $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
 
   # Update the package database
   log_info "Updating the package database..."
@@ -166,8 +172,8 @@ run_action_add_docker-ce() {
   fi
 
   # Add the confirmed or provided user to the Docker group
-  if ! usermod -aG docker "$docker_user"; then
-    log_error "Failed to add $docker_user to the Docker group."
+  if ! usermod -aG docker "$new_user"; then
+    log_error "Failed to add $new_user to the Docker group."
     return "$NOK"
   fi
 

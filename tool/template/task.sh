@@ -21,7 +21,7 @@ task_xxxx() {
     return "$NOK"
   fi
 
-  log_info "xxxx has been successfully xxxxx."
+  log_info "xxxx has been successfully."
   
   return "$OK"
 }

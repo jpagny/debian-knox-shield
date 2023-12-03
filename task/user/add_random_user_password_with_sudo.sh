@@ -61,6 +61,11 @@ check_prerequisites_add_random_user_password_with_sudo_privileges() {
     return "$NOK"
   fi
 
+  # install pwgen package
+  if ! install_package "pwgen"; then
+    return "$NOK"
+  fi
+
   return "$OK"
 }
 
