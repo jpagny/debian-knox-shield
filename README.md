@@ -70,7 +70,7 @@ tool/build_task.sh "task_name" "folder_name" "need_prerequisites" "need_post_act
 **For example:**
 
 ```shell
-`tool/build_task.sh "hello_world" "message" true true`
+tool/build_task.sh "hello_world" "message" true true
 ```
 
 This command will create a task in `task/message/hello_world.sh` with a ready-made template that includes prerequisite functions and post-action steps.
