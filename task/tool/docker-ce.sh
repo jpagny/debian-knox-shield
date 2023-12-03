@@ -7,6 +7,20 @@ source "$(dirname "$0")/../core/01_logger.sh"
 source "$(dirname "$0")/../core/02_execute_task.sh"
 source "$(dirname "$0")/../core/03_utils.sh"
 
+### Task for Installing Docker Community Edition (CE)
+#
+# Function..........: task_add_docker-ce
+# Description.......: Installs Docker CE on the system and performs post-installation actions to ensure that 
+#                     Docker is properly configured and operational. This includes checking prerequisites, 
+#                     installing Docker, adding a user to the Docker group for secure operation, and verifying 
+#                     the installation with a test container.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If Docker CE is successfully installed, configured, and verified.
+#               - 1 (NOK): If the installation or configuration process fails at any point.
+##
 task_add_docker-ce() {
   
   local name="add_docker-ce"
@@ -26,6 +40,21 @@ task_add_docker-ce() {
   return "$OK"
 }
 
+### Check Prerequisites for Docker CE Installation
+#
+# Function..........: check_prerequisites_add_docker-ce
+# Description.......: Prepares the system for Docker CE installation. This includes installing necessary 
+#                     packages like apt-transport-https, ca-certificates, curl, and software-properties-common. 
+#                     It also involves adding Docker's official GPG key, setting up the Docker repository, 
+#                     updating the package database, and installing Docker CE.
+# Parameters........: 
+#               - None. The function handles all the steps necessary to prepare for Docker CE installation.
+# Returns...........: 
+#               - 0 (OK): If all prerequisites are successfully installed and configured, and Docker CE is 
+#                          installed.
+#               - 1 (NOK): If any step in the process fails, including package installation, repository setup, 
+#                           or Docker CE installation.
+##
 check_prerequisites_add_docker-ce() {
 
   # install apt-transport-https package
@@ -78,51 +107,68 @@ check_prerequisites_add_docker-ce() {
   return "$OK"
 }
 
+### Run Action for Docker CE Installation and Configuration
+#
+# Function..........: run_action_add_docker-ce
+# Description.......: Secures the Docker installation by adding a non-root user to the Docker group. This function 
+#                     first attempts to find a non-root user with UID 1000 and asks for confirmation to add this user 
+#                     to the Docker group. If the user declines or no such user exists, it prompts for a username 
+#                     and adds the specified user to the Docker group, enhancing security by allowing Docker commands 
+#                     to be run without root privileges.
+# Parameters........: 
+#               - None. The function interacts with the user for input when necessary.
+# Returns...........: 
+#               - 0 (OK): If a user is successfully added to the Docker group.
+#               - 1 (NOK): If the process fails, including user not existing or issues in modifying the Docker group.
+##
 run_action_add_docker-ce() {
 
   log_info "Securing the Docker installation..."
 
-  # Find the non-root user with UID 1000
-  local docker_user=$(awk -F: '$3 == 1000 && $1 != "root" {print $1}' /etc/passwd)
+  # Step 1: Get a new username
+  local new_user=$(ask_for_username_approval)
 
-  while true; do
-    # Check if a user was found and confirm to add
-    if [ -n "$docker_user" ]; then
-      read -p "Add user $docker_user to the Docker group? [Y/n] " response
-      case $response in
-        [Nn]* ) docker_user="";;
-          * ) break;;
-        esac
-      fi
+  # Step 2: Get a password for the new user
+  local user_password=$(ask_for_password_approval)
 
-      # Ask for a different user if initial user is not confirmed
-      if [ -z "$docker_user" ]; then
-        read -p "Enter the username to add to the Docker group: " docker_user
-        if getent passwd "$docker_user" > /dev/null; then
-          break
-        else
-          log_error "User $docker_user does not exist. Please try again."
-          docker_user=""
-        fi
-      fi
-    done
+  # Step 3: Create the user with the provided password
+  log_info "Creating user $new_user..."
+  useradd -m -p "$(openssl passwd -1 "$user_password")" "$new_user"
+  if [ $? -ne 0 ]; then
+    log_error "Failed to create user $new_user."
+    return "$NOK"
+  fi
 
-    # Create Docker user group, if not already exists
-    if ! getent group docker > /dev/null; then
-        groupadd docker
-    fi
+  # Step 4: Add the new user to the Docker group
+  # Create Docker user group, if not already exists
+  if ! getent group docker > /dev/null; then
+    groupadd docker
+  fi
 
-    # Add the confirmed or provided user to the Docker group
-    if ! usermod -aG docker "$docker_user"; then
-        log_error "Failed to add $docker_user to the Docker group."
-        return "$NOK"
-    fi
+  # Add the confirmed or provided user to the Docker group
+  if ! usermod -aG docker "$docker_user"; then
+    log_error "Failed to add $docker_user to the Docker group."
+    return "$NOK"
+  fi
 
-    log_info "User $docker_user has been added to the Docker group successfully."
+  log_info "User $new_user has been added to the Docker group successfully."
 
-    return "$OK"
+  return "$OK"
 }
 
+### Post-Installation Actions for Docker CE
+#
+# Function..........: post_actions_add_docker-ce
+# Description.......: Verifies the Docker CE installation by running the 'hello-world' Docker container. This function 
+#                     tests if Docker is correctly installed and operational by executing a simple, lightweight container. 
+#                     The successful execution of the 'hello-world' container is a common method to confirm that Docker 
+#                     can pull images from Docker Hub and run containers.
+# Parameters........: 
+#               - None. The function performs the verification without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the 'hello-world' container runs successfully, indicating a functional Docker setup.
+#               - 1 (NOK): If the 'hello-world' container fails to run, suggesting an issue with the Docker installation.
+##
 post_actions_add_docker-ce() {
 
   log_info "Testing Docker installation with the hello-world image..."

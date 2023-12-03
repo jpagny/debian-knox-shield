@@ -68,3 +68,69 @@ install_package(){
     fi
   fi
 }
+
+### Ask for Username Approval
+#
+# Function..........: ask_for_username_approval
+# Description.......: Fetches a random username from an API and asks for user approval.
+# Returns...........: The approved username.
+# Output............: Logs the progress and results of the username approval process.
+#
+##
+ask_for_username_approval() {
+
+  local userData 
+  local username 
+  local approval="n"
+
+  while [ "$approval" != "y" ]; do
+    userData=$(curl -s https://randomuser.me/api/)
+    
+    log_debug "Fetched JSON data: $userData"
+
+    username=$(echo "$userData" | jq -r '.results[0].login.username')
+
+    log_debug "Extracted username: $username"
+
+    if [ -z "$username" ]; then
+      echo "No username was extracted. There might be an issue with the API or jq parsing."
+      continue
+    fi
+
+    log_debug "Generated username: $username"
+
+    read -r -p "Do you like this username : $username ? (y/n): " approval
+    
+    if [ "$approval" != "y" ]; then
+      log_debug "Fetching a new username..."
+    fi
+
+  done
+
+  echo "$username"
+}
+
+### Ask for Password Approval
+#
+# Function..........: ask_for_password_approval
+# Description.......: Generates a strong password using the generate_strong_password function and asks for user approval.
+# Returns...........: The approved strong password.
+# Output............: Echoes the generated password and the query for approval, and logs the progress of password generation and approval.
+#
+##
+ask_for_password_approval() {
+
+  while true; do
+    local password=$(generate_strong_password)
+
+    # Is it safe to show password ? 
+    read -p "Do you approve this password : $password ? (y/n): " approval
+
+    if [[ "$approval" == "y" || "$approval" == "Y" ]]; then
+      echo "$password"
+      break
+    else
+      echo "Generating a new password..."
+    fi
+  done
+}
