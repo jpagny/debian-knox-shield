@@ -272,6 +272,8 @@ A special thanks to:
 
 Their contributions and resources have been invaluable in the creation of Debian Knox Shield.
 
+Additionally, we would like to acknowledge the official Debian documentation for security, which has been a valuable reference throughout the development process. You can find the official Debian security documentation  [here](https://www.debian.org/doc/manuals/securing-debian-manual/index.en.html).
+
 
 ## License
 
