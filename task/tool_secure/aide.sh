@@ -75,11 +75,18 @@ check_prerequisites_add_aide() {
 ##
 run_action_add_aide() {
   # Initialize AIDE database
+  log_info "Configuring aide.conf..."
+  
+  echo "!/home/.*" >> /etc/aide/aide.conf
+  echo "!/var/log/.*" >> /etc/aide/aide.conf
+  
+
   log_info "Initializing AIDE database..."
-  aideinit
+
+  aide --config /etc/aide/aide.conf --init 
 
   if [ -f /var/lib/aide/aide.db.new ]; then
-    mv /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+    cp /var/lib/aide/aide.db.new /var/lib/aide/aide.db
     return "$OK"
   else
     log_error "Failed to create AIDE database."
@@ -103,7 +110,7 @@ run_action_add_aide() {
 post_actions_add_aide() {
   # Run a manual AIDE check for verification purposes
   log_info "Running a manual AIDE check for verification..."
-  aide --check
+  aide --config /etc/aide/aide.conf --check
 
   # Check the exit status of the last command (AIDE check)
   if [ $? -eq 0 ]; then

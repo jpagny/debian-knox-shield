@@ -94,9 +94,9 @@ run_action_add_chkrootkit() {
 ##
 post_actions_add_chkrootkit() {
   # Edit chkrootkit configuration to enable daily runs
-  sed -i 's/RUN_DAILY="false"/RUN_DAILY="true"/' /etc/chkrootkit.conf
+  sed -i 's/RUN_DAILY="false"/RUN_DAILY="true"/' /etc/chkrootkit/chkrootkit.conf
 
-  if grep -q 'RUN_DAILY="true"' /etc/chkrootkit.conf; then
+  if grep -q 'RUN_DAILY="true"' /etc/chkrootkit/chkrootkit.conf; then
     log_info "Daily chkrootkit check has been enabled."
     return "$OK"
   else

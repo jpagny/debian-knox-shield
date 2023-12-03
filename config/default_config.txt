@@ -19,20 +19,22 @@ mandatory|user/add_random_user_password_with_sudo.sh
 # Manage network
 mandatory|network/ssh_random_port.sh
 
-# Manage scheduler
-mandatory|scheduler/auto_update_upgrade.sh
-
 # Manage tools related to security
 mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
 mandatory|tool_secure/knockd.sh
+mandatory|tool_secure/chkrootkit.sh
+mandatory|tool_secure/aide.sh
+mandatory|tool_secure/lynis.sh
 
 # Manage variety of tools
 optional|tool/delete_unnecessary_tools.sh
 optional|tool/vim.sh
+mandatory|tool/docker-ce.sh
 
-#Manage message
-optional|message/hello_world.sh
+# Manage scheduler
+mandatory|scheduler/auto_update_upgrade.sh
+mandatory|scheduler/aide_report_mail.sh
 
 # End 
 mandatory|network/ssh_deactivate_root.sh

@@ -462,6 +462,89 @@ install_package(){
   fi
 }
 
+### Ask for Username Approval
+#
+# Function..........: ask_for_username_approval
+# Description.......: Fetches a random username from an API and asks for user approval.
+# Returns...........: The approved username.
+# Output............: Logs the progress and results of the username approval process.
+#
+##
+ask_for_username_approval() {
+
+  local userData 
+  local username 
+  local approval="n"
+
+  while [ "$approval" != "y" ]; do
+    userData=$(curl -s https://randomuser.me/api/)
+    
+    log_debug "Fetched JSON data: $userData"
+
+    username=$(echo "$userData" | jq -r '.results[0].login.username')
+
+    log_debug "Extracted username: $username"
+
+    if [ -z "$username" ]; then
+      echo "No username was extracted. There might be an issue with the API or jq parsing."
+      continue
+    fi
+
+    log_debug "Generated username: $username"
+
+    read -r -p "Do you like this username : $username ? (y/n): " approval
+    
+    if [ "$approval" != "y" ]; then
+      log_debug "Fetching a new username..."
+    fi
+
+  done
+
+  echo "$username"
+}
+
+### Ask for Password Approval
+#
+# Function..........: ask_for_password_approval
+# Description.......: Generates a strong password using the generate_strong_password function and asks for user approval.
+# Returns...........: The approved strong password.
+# Output............: Echoes the generated password and the query for approval, and logs the progress of password generation and approval.
+#
+##
+ask_for_password_approval() {
+
+  while true; do
+    local password=$(generate_strong_password)
+
+    # Is it safe to show password ? 
+    read -p "Do you approve this password : $password ? (y/n): " approval
+
+    if [[ "$approval" == "y" || "$approval" == "Y" ]]; then
+      echo "$password"
+      break
+    else
+      echo "Generating a new password..."
+    fi
+  done
+}
+
+
+### Generate Strong Password
+#
+# Function..........: generate_strong_password
+# Description.......: Generates a strong, random password using system randomness sources.
+# Parameters........: None.
+# Returns...........: A string containing a randomly generated password.
+# Output............: The generated password (output to standard output).
+# Notes.............: The password includes alphanumeric characters and special characters,
+#                     ensuring a minimum length of 15 characters.
+##
+generate_strong_password() {
+  # Generate a random password with a minimum length of 15 characters,
+  # including alphanumeric and special characters
+  < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()_+{}|:<>?=' | head -c 20 ; echo
+}
+
 #-------------- 04_option.sh
 
 ### Process Command Line Arguments for Debug Mode
@@ -1269,10 +1352,10 @@ run_action_disable_uncommon_network_protocols() {
         log_error "Failed to disable uncommon network protocols."
         # Optionally restore from backup
         [ -f "$backupFile" ] && mv "$backupFile" "$configFile"
-        return 1  # or any non-zero value for NOK
+        return $NOK
     else
         log_info "Uncommon network protocols have been successfully disabled."
-        return 0  # or use a predefined constant for OK
+        return $OK
     fi
 }
 
@@ -1338,10 +1421,10 @@ run_action_disable_uncommon_network_interfaces() {
         log_error "Failed to disable Bluetooth interfaces."
         # Optionally restore from backup
         [ -f "$backupFile" ] && mv "$backupFile" "$configFile"
-        return 1  # NOK
+        return $NOK
     else
         log_info "Bluetooth interfaces has been successfully disabled."
-        return 0  # OK
+        return $OK
     fi
 }
 
@@ -1733,88 +1816,6 @@ run_action_add_random_user_password_with_sudo_privileges() {
   log_info "User $username added with sudo privileges."
 }
 
-### Ask for Username Approval
-#
-# Function..........: ask_for_username_approval
-# Description.......: Fetches a random username from an API and asks for user approval.
-# Returns...........: The approved username.
-# Output............: Logs the progress and results of the username approval process.
-#
-##
-ask_for_username_approval() {
-
-  local userData 
-  local username 
-  local approval="n"
-
-  while [ "$approval" != "y" ]; do
-    userData=$(curl -s https://randomuser.me/api/)
-    
-    log_debug "Fetched JSON data: $userData"
-
-    username=$(echo "$userData" | jq -r '.results[0].login.username')
-
-    log_debug "Extracted username: $username"
-
-    if [ -z "$username" ]; then
-      echo "No username was extracted. There might be an issue with the API or jq parsing."
-      continue
-    fi
-
-    log_debug "Generated username: $username"
-
-    read -r -p "Do you like this username : $username ? (y/n): " approval
-    
-    if [ "$approval" != "y" ]; then
-      log_debug "Fetching a new username..."
-    fi
-
-  done
-
-  echo "$username"
-}
-
-### Ask for Password Approval
-#
-# Function..........: ask_for_password_approval
-# Description.......: Generates a strong password using the generate_strong_password function and asks for user approval.
-# Returns...........: The approved strong password.
-# Output............: Echoes the generated password and the query for approval, and logs the progress of password generation and approval.
-#
-##
-ask_for_password_approval() {
-
-  while true; do
-    local password=$(generate_strong_password)
-
-    # Is it safe to show password ? 
-    read -p "Do you approve this password : $password ? (y/n): " approval
-
-    if [[ "$approval" == "y" || "$approval" == "Y" ]]; then
-      echo "$password"
-      break
-    else
-      echo "Generating a new password..."
-    fi
-  done
-}
-
-### Generate Strong Password
-#
-# Function..........: generate_strong_password
-# Description.......: Generates a strong, random password using system randomness sources.
-# Parameters........: None.
-# Returns...........: A string containing a randomly generated password.
-# Output............: The generated password (output to standard output).
-# Notes.............: The password includes alphanumeric characters and special characters,
-#                     ensuring a minimum length of 15 characters.
-##
-generate_strong_password() {
-  # Generate a random password with a minimum length of 15 characters,
-  # including alphanumeric and special characters
-  < /dev/urandom tr -dc 'A-Za-z0-9!@#$%^&*()_+{}|:<>?=' | head -c 20 ; echo
-}
-
 # Run the task to add a new user with sudo privileges
 task_add_random_user_password_with_sudo_privileges
 
@@ -1945,95 +1946,6 @@ post_actions_ssh_random_port() {
 
 # Run the task to set a random SSH port
 task_ssh_random_port
-#-------------- scheduler/auto_update_upgrade.sh - mandatory
-# shellcheck source=/dev/null
-
-### Task for Setting Up Automatic System Update and Upgrade Scheduler
-#
-# Function..........: task_scheduler_auto_update_upgrade
-# Description.......: Sets up a scheduler for automatically updating and upgrading the system at regular intervals. 
-#                     This task automates the process of keeping the system up-to-date with the latest packages 
-#                     and security updates.
-# Parameters........: 
-#               - None directly. The function uses predefined local variables for task name, root requirement,
-#                     prerequisites, actions, post-actions, and task type.
-# Returns...........: 
-#               - 0 (OK): If the scheduler is successfully set up.
-#               - 1 (NOK): If setting up the scheduler fails.
-#
-###
-task_sheduler_auto_update_upgrade() {
-
-  local name="sheduler_auto_update_upgrade"
-  local isRootRequired=true
-  local prereq="check_prerequisites_$name"
-  local actions="run_action_$name"
-  local postActions=""
-  local task_type="mandatory"
-
-  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
-    log_error "Failed to set up automatic update and upgrade scheduler."
-    return "$NOK"
-  fi
-
-  log_info "Automatic update and upgrade scheduler successfully set up."
-  
-  return "$OK"
-}
-
-check_prerequisites_sheduler_auto_update_upgrade() {
-
-  # install ssh package
-  if ! install_package "unattended-upgrades"; then
-    return "$NOK"
-  fi
-
-  return "$OK"
-}
-
-### Run Action to Configure Automatic System Update and Upgrade
-#
-# Function..........: run_action_scheduler_auto_update_upgrade
-# Description.......: Configures the system to perform automatic updates and upgrades using unattended-upgrades. 
-#                     This function first configures the necessary parameters in the unattended-upgrades 
-#                     configuration file. It then sets up automatic update checks and enables automatic upgrades 
-#                     by modifying the apt configuration. A backup of the original configuration files is created 
-#                     before any changes are made. Additionally, the function performs a dry run to test the 
-#                     configuration.
-# Parameters........: None. The function uses predefined file paths and configurations.
-# Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
-#
-###
-run_action_sheduler_auto_update_upgrade() {
-
-   # Create backup directory if it doesn't exist
-    local backup_dir="/etc/apt/backup"
-    if [ ! -d "$backup_dir" ]; then
-        log_info "Creating backup directory at $backup_dir."
-        mkdir -p "$backup_dir"
-    fi
-
-    # Configure unattended-upgrades
-    log_info "Configuring automatic updates..."
-    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/backup/50unattended-upgrades.backup
-    sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
-    sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
-
-    # Enable automatic updates
-    log_info "Activating automatic updates and upgrades..."
-    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/backup/20auto-upgrades.backup
-    echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
-    echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
-
-    # Test the configuration
-    log_debug "Testing the automatic update configuration..."
-    unattended-upgrades --dry-run --debug &> /dev/null
-
-    log_info "Configuration complete."
-}
-
-# Run the task to disable root account
-task_sheduler_auto_update_upgrade
 #-------------- firewall/ufw_settings.sh - mandatory
 
 # shellcheck source=/dev/null
@@ -2542,6 +2454,327 @@ post_actions_add_knockd() {
 
 # Run the task to add knockd
 task_add_knockd
+#-------------- tool_secure/chkrootkit.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Installing and Running chkrootkit
+#
+# Function..........: task_add_chkrootkit
+# Description.......: Performs the task of installing and running chkrootkit on the system. chkrootkit is a tool 
+#                     that scans for rootkits, backdoors, and possible local exploits. This task involves checking 
+#                     prerequisites, executing the chkrootkit scan, and performing any necessary post-actions.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If chkrootkit is successfully executed.
+#               - 1 (NOK): If the process fails at any point.
+##
+task_add_chkrootkit() {
+  
+  local name="add_chkrootkit"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "chkrootkit failed."
+    return "$NOK"
+  fi
+
+  log_info "chkrootkit has been successfully chkrootkitx."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for chkrootkit Installation
+#
+# Function..........: check_prerequisites_add_chkrootkit
+# Description.......: Checks and ensures that the prerequisites for installing chkrootkit are met. This primarily 
+#                     involves the installation of the chkrootkit package. The function uses an `install_package` 
+#                     utility to attempt installation.
+# Parameters........: 
+#               - None. The function directly checks for the presence of the chkrootkit package and attempts to install it.
+# Returns...........: 
+#               - 0 (OK): If the chkrootkit package is successfully installed or already present.
+#               - 1 (NOK): If the installation fails.
+##
+check_prerequisites_add_chkrootkit() {
+  # install chkrootkit package
+  if ! install_package "chkrootkit"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action for chkrootkit
+#
+# Function..........: run_action_add_chkrootkit
+# Description.......: Executes the chkrootkit scan. This function is responsible for actually running the chkrootkit 
+#                     tool, which scans the system for known rootkits, backdoors, and potentially harmful local exploits.
+#                     The function logs the initiation of the scan and then executes the chkrootkit command.
+# Parameters........: 
+#               - None. The function directly executes the chkrootkit scan without any additional parameters.
+# Returns...........: 
+#               - 0 (OK): Always returns OK as it does not check the outcome of the chkrootkit scan.
+##
+run_action_add_chkrootkit() {
+  # Run chkrootkit scan
+  log_info "Running chkrootkit scan..."
+  chkrootkit
+
+  return "$OK"
+}
+
+### Post Actions for chkrootkit
+#
+# Function..........: post_actions_add_chkrootkit
+# Description.......: Configures the chkrootkit to run daily checks. This function modifies the chkrootkit configuration 
+#                     file to enable automated daily scans. It uses the `sed` command to change the configuration setting 
+#                     `RUN_DAILY` from "false" to "true" in the `/etc/chkrootkit.conf` file. It then verifies if the change 
+#                     was successful.
+# Parameters........: 
+#               - None. The function operates directly on the chkrootkit configuration file.
+# Returns...........: 
+#               - 0 (OK): If the daily chkrootkit check is successfully enabled.
+#               - 1 (NOK): If the process of enabling the daily check fails.
+##
+post_actions_add_chkrootkit() {
+  # Edit chkrootkit configuration to enable daily runs
+  sed -i 's/RUN_DAILY="false"/RUN_DAILY="true"/' /etc/chkrootkit/chkrootkit.conf
+
+  if grep -q 'RUN_DAILY="true"' /etc/chkrootkit/chkrootkit.conf; then
+    log_info "Daily chkrootkit check has been enabled."
+    return "$OK"
+  else
+    log_error "Failed to enable daily chkrootkit check."
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+# Run the task to chkrootkit
+task_add_chkrootkit
+
+#-------------- tool_secure/aide.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Installing and Configuring AIDE
+#
+# Function..........: task_add_aide
+# Description.......: Installs and configures AIDE (Advanced Intrusion Detection Environment) on the system. AIDE is 
+#                     a file integrity checker used to detect unauthorized changes to files. The task involves 
+#                     executing a series of steps: checking prerequisites, performing the installation and initial 
+#                     configuration of AIDE, and executing post-installation actions.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If AIDE is successfully installed and configured.
+#               - 1 (NOK): If the process fails at any point.
+##
+task_add_aide() {
+  
+  local name="add_aide"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "add_aide failed."
+    return "$NOK"
+  fi
+
+  log_info "add_aide has been successfully add_aidex."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for AIDE Installation
+#
+# Function..........: check_prerequisites_add_aide
+# Description.......: Checks and ensures that the prerequisites for installing AIDE (Advanced Intrusion Detection 
+#                     Environment) are met. This primarily involves the installation of the AIDE package. The function 
+#                     uses an `install_package` utility to attempt the installation of AIDE.
+# Parameters........: 
+#               - None. The function directly checks for the presence of the AIDE package and attempts to install it.
+# Returns...........: 
+#               - 0 (OK): If the AIDE package is successfully installed or already present.
+#               - 1 (NOK): If the installation fails.
+##
+check_prerequisites_add_aide() {
+  # Install AIDE package
+  if ! install_package "aide"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action for AIDE Initialization
+#
+# Function..........: run_action_add_aide
+# Description.......: Executes the initial setup of AIDE (Advanced Intrusion Detection Environment). This includes 
+#                     initializing the AIDE database by running 'aideinit'. After initialization, it checks for the 
+#                     creation of the new AIDE database file and moves it to the active database location.
+# Parameters........: 
+#               - None. The function executes the AIDE initialization process without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the AIDE database is successfully initialized and configured.
+#               - 1 (NOK): If there is a failure in creating or setting up the AIDE database.
+##
+run_action_add_aide() {
+  # Initialize AIDE database
+  log_info "Configuring aide.conf..."
+  
+  echo "!/home/.*" >> /etc/aide/aide.conf
+  echo "!/var/log/.*" >> /etc/aide/aide.conf
+  
+
+  log_info "Initializing AIDE database..."
+
+  aide --config /etc/aide/aide.conf --init 
+
+  if [ -f /var/lib/aide/aide.db.new ]; then
+    cp /var/lib/aide/aide.db.new /var/lib/aide/aide.db
+    return "$OK"
+  else
+    log_error "Failed to create AIDE database."
+    return "$NOK"
+  fi
+}
+
+### Post-Installation Actions for AIDE
+#
+# Function..........: post_actions_add_aide
+# Description.......: Performs post-installation actions for AIDE (Advanced Intrusion Detection Environment). 
+#                     This includes running a manual AIDE check to verify the correct functioning of AIDE. The function
+#                     logs the initiation of the check, executes the `aide --check` command, and then assesses the 
+#                     outcome to ensure the integrity check completes successfully.
+# Parameters........: 
+#               - None. The function executes the AIDE check without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the AIDE check is completed successfully and verification passes.
+#               - 1 (NOK): If the AIDE check fails, indicating a problem with the AIDE setup.
+##
+post_actions_add_aide() {
+  # Run a manual AIDE check for verification purposes
+  log_info "Running a manual AIDE check for verification..."
+  aide --config /etc/aide/aide.conf --check
+
+  # Check the exit status of the last command (AIDE check)
+  if [ $? -eq 0 ]; then
+    log_info "AIDE check completed successfully. Verification passed."
+    return "$OK"
+  else
+    log_error "AIDE check failed. Verification did not pass."
+    return "$NOK"
+  fi
+}
+
+# Run the task to add_aide
+task_add_aide
+
+#-------------- tool_secure/lynis.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Installing and Configuring Lynis
+#
+# Function..........: task_add_lynis
+# Description.......: Installs and configures Lynis, a security auditing tool, on the system. Lynis is used for 
+#                     performing security checks, system audits, and compliance testing. The task involves executing 
+#                     a series of steps: checking prerequisites, installing Lynis, and optionally running post-installation 
+#                     actions.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If Lynis is successfully installed and configured.
+#               - 1 (NOK): If the installation or configuration process fails at any point.
+##
+task_add_lynis() {
+  
+  local name="add_lynis"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "add_lynis failed."
+    return "$NOK"
+  fi
+
+  log_info "add_lynis has been successfully add_lynisx."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for Lynis Installation
+#
+# Function..........: check_prerequisites_add_lynis
+# Description.......: Checks and ensures that the prerequisites for installing Lynis are met. This primarily 
+#                     involves the installation of the Lynis package. The function uses an `install_package` 
+#                     utility to attempt the installation of Lynis.
+# Parameters........: 
+#               - None. The function directly checks for the presence of the Lynis package and attempts to install it.
+# Returns...........: 
+#               - 0 (OK): If the Lynis package is successfully installed or already present.
+#               - 1 (NOK): If the installation fails.
+##
+check_prerequisites_add_lynis() {
+  # Install Lynis
+  if ! install_package "lynis"; then
+    log_error "Failed to install Lynis."
+    return "$NOK"
+  fi
+  
+  return "$OK"
+}
+
+### Run Action for Lynis Audit
+#
+# Function..........: run_action_add_lynis
+# Description.......: Executes the Lynis audit process. This function is responsible for running the Lynis 
+#                     command to perform a system-wide audit. It logs the initiation of the audit, executes the 
+#                     `lynis audit system` command, and then assesses the outcome to ensure the audit completes 
+#                     successfully.
+# Parameters........: 
+#               - None. The function executes the Lynis audit without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the Lynis audit is completed successfully.
+#               - 1 (NOK): If there is a failure in the Lynis audit process.
+##
+run_action_add_lynis() {
+  log_info "Running system audit..."
+
+  # Run Lynis audit
+  lynis audit system
+
+  # Check the exit status of the Lynis command
+  if [ $? -eq 0 ]; then
+    log_info "Lynis audit completed successfully."
+  else
+    log_error "Lynis audit encountered issues."
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+# Run the task to add_lynis
+task_add_lynis
+
 #-------------- tool/delete_unnecessary_tools.sh - optional
 
 # shellcheck source=/dev/null
@@ -2693,7 +2926,7 @@ task_add_vim() {
 ###
 run_action_add_vim() {
 
-# install rsyslog package
+# install vim package
   if ! install_package "vim"; then
     return "$NOK"
   fi
@@ -2701,6 +2934,378 @@ run_action_add_vim() {
 
 # Run the task to add vim
 task_add_vim
+#-------------- tool/docker-ce.sh - mandatory
+
+# shellcheck source=/dev/null
+
+### Task for Installing Docker Community Edition (CE)
+#
+# Function..........: task_add_docker-ce
+# Description.......: Installs Docker CE on the system and performs post-installation actions to ensure that 
+#                     Docker is properly configured and operational. This includes checking prerequisites, 
+#                     installing Docker, adding a user to the Docker group for secure operation, and verifying 
+#                     the installation with a test container.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement, 
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If Docker CE is successfully installed, configured, and verified.
+#               - 1 (NOK): If the installation or configuration process fails at any point.
+##
+task_add_docker-ce() {
+  
+  local name="add_docker-ce"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions="post_actions_$name"
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "add_docker failed."
+    return "$NOK"
+  fi
+
+  log_info "add_docker has been successfully add_dockerx."
+  
+  return "$OK"
+}
+
+### Check Prerequisites for Docker CE Installation
+#
+# Function..........: check_prerequisites_add_docker-ce
+# Description.......: Prepares the system for Docker CE installation. This includes installing necessary 
+#                     packages like apt-transport-https, ca-certificates, curl, and software-properties-common. 
+#                     It also involves adding Docker's official GPG key, setting up the Docker repository, 
+#                     updating the package database, and installing Docker CE.
+# Parameters........: 
+#               - None. The function handles all the steps necessary to prepare for Docker CE installation.
+# Returns...........: 
+#               - 0 (OK): If all prerequisites are successfully installed and configured, and Docker CE is 
+#                          installed.
+#               - 1 (NOK): If any step in the process fails, including package installation, repository setup, 
+#                           or Docker CE installation.
+##
+check_prerequisites_add_docker-ce() {
+
+  # install apt-transport-https package
+  if ! install_package "apt-transport-https"; then
+    return "$NOK"
+  fi
+
+  # install ca-certificates package
+  if ! install_package "ca-certificates"; then
+    return "$NOK"
+  fi
+
+  # install curl package
+  if ! install_package "curl"; then
+    return "$NOK"
+  fi
+
+  # install software-properties-common package
+  if ! install_package "software-properties-common"; then
+    return "$NOK"
+  fi
+
+  # Add Docker’s official GPG key
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+
+  # Verify the fingerprint
+  local fingerprint=$(apt-key fingerprint 0EBFCD88 | grep -c "9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88")
+  if [ "$fingerprint" -ne 1 ]; then
+    log_error "The GPG key fingerprint is not valid."
+    return "$NOK"
+  fi
+
+  # Set up the stable repository
+  add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+  # Update the package database
+  log_info "Updating the package database..."
+  if ! apt-get update; then
+    log_error "Failed to update the package database."
+    return "$NOK"
+  fi
+
+  # Install the latest version of Docker CE
+  log_info "Installing Docker CE..."
+  if ! install_package "docker-ce"; then
+    log_error "Failed to install Docker CE."
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action for Docker CE Installation and Configuration
+#
+# Function..........: run_action_add_docker-ce
+# Description.......: Secures the Docker installation by creating a new non-root user and adding them to the Docker 
+#                     group. The function prompts for a new username and password, confirms the credentials with the user, 
+#                     creates the new user with the provided credentials, and adds them to the Docker group. It also 
+#                     ensures that the Docker group exists before adding the user to it.
+# Parameters........: 
+#               - None. The function uses interactive prompts to gather input for the new user's credentials.
+# Returns...........: 
+#               - 0 (OK): If a new user is successfully created and added to the Docker group.
+#               - 1 (NOK): If any part of the process fails, such as user creation or adding the user to the Docker group.
+##
+run_action_add_docker-ce() {
+
+  log_info "Securing the Docker installation..."
+
+  local new_user
+  local user_password
+  local confirmation
+
+  while true; do
+
+    # Ask for username approval and capture the returned username
+    new_user=$(ask_for_username_approval)
+
+    # Ask for password approval and capture the returned password
+    user_password=$(ask_for_password_approval)
+    
+    # Is it safe to show credentials ? 
+    echo "Please make sure you have recorded this information safely:"
+    echo "Username: $new_user"
+    echo "Password: $user_password"
+
+    # Ask for confirmation
+    read -p "Have you saved the username and password? (y/n): " confirmation
+    if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
+      break
+    else
+      echo "Let's try again..."
+    fi
+
+  done
+
+  # Create the user with the provided password
+  log_info "Creating user $new_user..."
+  # Use the useradd command to create the user without a password prompt
+  adduser --gecos "" --disabled-password "$new_user"
+
+  # Set the password for the user securely using chpasswd
+  echo "$new_user:$user_password" | chpasswd
+
+  # Add the new user to the Docker group
+  # Create Docker user group, if not already exists
+  if ! getent group docker > /dev/null; then
+    groupadd docker
+  fi
+
+  # Add the confirmed or provided user to the Docker group
+  if ! usermod -aG docker "$docker_user"; then
+    log_error "Failed to add $docker_user to the Docker group."
+    return "$NOK"
+  fi
+
+  log_info "User $new_user has been added to the Docker group successfully."
+
+  return "$OK"
+}
+
+### Post-Installation Actions for Docker CE
+#
+# Function..........: post_actions_add_docker-ce
+# Description.......: Verifies the Docker CE installation by running the 'hello-world' Docker container. This function 
+#                     tests if Docker is correctly installed and operational by executing a simple, lightweight container. 
+#                     The successful execution of the 'hello-world' container is a common method to confirm that Docker 
+#                     can pull images from Docker Hub and run containers.
+# Parameters........: 
+#               - None. The function performs the verification without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the 'hello-world' container runs successfully, indicating a functional Docker setup.
+#               - 1 (NOK): If the 'hello-world' container fails to run, suggesting an issue with the Docker installation.
+##
+post_actions_add_docker-ce() {
+
+  log_info "Testing Docker installation with the hello-world image..."
+
+  # Run the hello-world Docker container
+  if ! docker run hello-world; then
+    log_error "Failed to run the hello-world Docker container."
+    return "$NOK"
+  fi
+
+  log_info "Docker hello-world container ran successfully. Docker is functioning correctly."
+
+  return "$OK"
+}
+
+# Run the task to add_docker
+task_add_docker-ce
+#-------------- scheduler/auto_update_upgrade.sh - mandatory
+# shellcheck source=/dev/null
+
+### Task for Setting Up Automatic System Update and Upgrade Scheduler
+#
+# Function..........: task_scheduler_auto_update_upgrade
+# Description.......: Sets up a scheduler for automatically updating and upgrading the system at regular intervals. 
+#                     This task automates the process of keeping the system up-to-date with the latest packages 
+#                     and security updates.
+# Parameters........: 
+#               - None directly. The function uses predefined local variables for task name, root requirement,
+#                     prerequisites, actions, post-actions, and task type.
+# Returns...........: 
+#               - 0 (OK): If the scheduler is successfully set up.
+#               - 1 (NOK): If setting up the scheduler fails.
+#
+###
+task_sheduler_auto_update_upgrade() {
+
+  local name="sheduler_auto_update_upgrade"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "Failed to set up automatic update and upgrade scheduler."
+    return "$NOK"
+  fi
+
+  log_info "Automatic update and upgrade scheduler successfully set up."
+  
+  return "$OK"
+}
+
+check_prerequisites_sheduler_auto_update_upgrade() {
+
+  # install ssh package
+  if ! install_package "unattended-upgrades"; then
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+### Run Action to Configure Automatic System Update and Upgrade
+#
+# Function..........: run_action_scheduler_auto_update_upgrade
+# Description.......: Configures the system to perform automatic updates and upgrades using unattended-upgrades. 
+#                     This function first configures the necessary parameters in the unattended-upgrades 
+#                     configuration file. It then sets up automatic update checks and enables automatic upgrades 
+#                     by modifying the apt configuration. A backup of the original configuration files is created 
+#                     before any changes are made. Additionally, the function performs a dry run to test the 
+#                     configuration.
+# Parameters........: None. The function uses predefined file paths and configurations.
+# Returns...........: None directly. Outputs information about the configuration process and performs a dry run test.
+#
+###
+run_action_sheduler_auto_update_upgrade() {
+
+   # Create backup directory if it doesn't exist
+    local backup_dir="/etc/apt/backup"
+    if [ ! -d "$backup_dir" ]; then
+        log_info "Creating backup directory at $backup_dir."
+        mkdir -p "$backup_dir"
+    fi
+
+    # Configure unattended-upgrades
+    log_info "Configuring automatic updates..."
+    cp /etc/apt/apt.conf.d/50unattended-upgrades /etc/apt/backup/50unattended-upgrades.backup
+    sed -i '/"${distro_id}:${distro_codename}-updates";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+    sed -i '/"${distro_id}:${distro_codename}-security";/s/^\/\/ //' /etc/apt/apt.conf.d/50unattended-upgrades
+
+    # Enable automatic updates
+    log_info "Activating automatic updates and upgrades..."
+    cp /etc/apt/apt.conf.d/20auto-upgrades /etc/apt/backup/20auto-upgrades.backup
+    echo 'APT::Periodic::Update-Package-Lists "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+    echo 'APT::Periodic::Unattended-Upgrade "1";' | tee -a /etc/apt/apt.conf.d/20auto-upgrades
+
+    # Test the configuration
+    log_debug "Testing the automatic update configuration..."
+    unattended-upgrades --dry-run --debug &> /dev/null
+
+    log_info "Configuration complete."
+}
+
+# Run the task to disable root account
+task_sheduler_auto_update_upgrade
+#-------------- scheduler/aide_report_mail.sh - mandatory
+
+# shellcheck source=/dev/null
+
+task_aide_report_mail() {
+  
+  local name="aide_report_mail"
+  local isRootRequired=true
+  local prereq="check_prerequisites_$name"
+  local actions="run_action_$name"
+  local postActions=""
+  local task_type="mandatory"
+
+  if ! execute_and_check "$name" $isRootRequired "$prereq" "$actions" "$postActions" "$task_type"; then
+    log_error "aide_report_mail failed."
+    return "$NOK"
+  fi
+
+  log_info "aide_report_mail has been successfully aide_report_mailx."
+  
+  return "$OK"
+}
+
+check_prerequisites_aide_report_mail() {
+
+  # Check if AIDE is installed
+  if ! command -v aide >/dev/null 2>&1; then
+    log_error "AIDE is not installed. Please install AIDE first."
+    return "$NOK"
+  fi
+
+  # Check if the system can send emails
+  if ! command -v mail >/dev/null 2>&1; then
+    log_error "Mail command is not available. Please install mailutils or a similar package."
+    return "$NOK"
+  fi
+
+  return "$OK"
+}
+
+run_action_aide_report_mail() {
+
+  local report_email
+
+  # Ask for the email address and validate it
+  while true; do
+    read -p "Enter the email address for AIDE reports: " report_email
+
+    # Basic email validation using regex
+    if [[ "$report_email" =~ ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$ ]]; then
+      log_info "Email address validated."
+      break
+    else
+      log_error "Invalid email address. Please enter a valid email."
+    fi
+  done
+
+  # Add a new cron job for daily AIDE checks
+  log_info "Adding a cron job for daily AIDE checks..."
+
+  # Create a new cron job entry that checks for changes and sends an email if changes are detected
+  local cron_job="0 0 * * * /usr/bin/aide --config /etc/aide/aide.conf --check | grep -q 'changed' && echo '$(date '+\%Y-\%m-\%d') - Changes detected by AIDE' | mail -s 'AIDE Report' $report_email"
+
+  # Add the cron job to the crontab
+  (crontab -l 2>/dev/null; echo "$cron_job") | crontab -
+
+  # Check if the cron job was added successfully
+  if crontab -l | grep -Fq "$cron_job"; then
+    log_info "Cron job for daily AIDE checks added successfully."
+    return "$OK"
+  else
+    log_error "Failed to add cron job for daily AIDE checks."
+    return "$NOK"
+  fi
+  
+}
+
+# Run the task to aide_report_mail
+task_aide_report_mail
+
 #-------------- network/ssh_deactivate_root.sh - mandatory
 
 # shellcheck source=/dev/null
@@ -2922,9 +3527,7 @@ run_action_system_disable_root() {
 
   # Lock the root account
   passwd -l root >/dev/null 2>&1
-
-  # Change the root shell to nologin to prevent direct login / too dangerous ?
-  #sed -i '/^root:/s#:/bin/bash#:/usr/sbin/nologin#' /etc/passwd
+  sed -i '/^root:/s#:/bin/bash#:/usr/sbin/nologin#' /etc/passwd
 
   log_info "Root account has been secured and direct login disabled."
   
