@@ -88,10 +88,10 @@ run_action_disable_uncommon_network_protocols() {
         log_error "Failed to disable uncommon network protocols."
         # Optionally restore from backup
         [ -f "$backupFile" ] && mv "$backupFile" "$configFile"
-        return 1  # or any non-zero value for NOK
+        return $NOK
     else
         log_info "Uncommon network protocols have been successfully disabled."
-        return 0  # or use a predefined constant for OK
+        return $OK
     fi
 }
 

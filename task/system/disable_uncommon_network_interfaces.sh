@@ -63,10 +63,10 @@ run_action_disable_uncommon_network_interfaces() {
         log_error "Failed to disable Bluetooth interfaces."
         # Optionally restore from backup
         [ -f "$backupFile" ] && mv "$backupFile" "$configFile"
-        return 1  # NOK
+        return $NOK
     else
         log_info "Bluetooth interfaces has been successfully disabled."
-        return 0  # OK
+        return $OK
     fi
 }
 

@@ -224,12 +224,31 @@ Ensure you have the necessary permissions on the server to execute scripts and m
 
 Below is a table of tasks included in the Debian Knox Shield project:
 
-| Folder      | Task Name      | Purpose of Task                                 |
-|-------------|----------------|-------------------------------------------------|
-| `folder1/`  | `task1.sh`     | Description of what task1 does.                 |
-| `folder2/`  | `task2.sh`     | Description of what task2 does.                 |
-| `folder3/`  | `task3.sh`     | Description of what task3 does.                 |
-
+| Category  | Task Name | Purpose of Task |
+|-----------|-----------|-----------------|
+| `system`  | `task_configure_login_password.sh` | This task strengthens password security by updating encryption and password policies in the system's login configuration. |
+| `system`  | `task_configure_password_quality.sh` | This task configures enhanced password quality requirements in the system's password management module. It sets criteria such as minimum length, character variety, and retry limits to ensure strong password standards. |
+| `system`  | `task_system_disable_root.sh` | This task secures the root account by setting a random hashed password and disabling direct login, effectively enhancing the system's security. |
+| `system`| `task_disable_uncommon_file_system` |This task increases system security by disabling several uncommon file systems. It updates the system configuration to prevent the use of these file systems, reducing potential vulnerabilities associated with them. |
+| `system` | `task_disable_uncommon_firewire` | This task is designed to enhance system security by disabling certain FireWire drivers. It modifies the system configuration to prevent the use of these FireWire drivers, which are often unnecessary for most systems and can present security risks. |
+| `system` | `run_action_disable_uncommon_input_drivers` | This task focuses on securing the system by disabling a variety of uncommon input drivers. The script modifies system configurations to block certain input-related drivers, such as joystick devices, PC speakers, and various sound sequence modules.  |
+| `system` | `task_disable_uncommon_network_interfaces` | "This task is aimed at increasing the security of the system by disabling Bluetooth interfaces. The script updates the system configuration to prevent the use of Bluetooth, which is often not needed in a server environment and can pose a security risk. |
+| `system` | `task_disable_uncommon_network_protocols` | This task enhances network security by disabling certain uncommon network protocols. The script configures the system to prevent the use of protocols such as DCCP, SCTP, RDS, and TIPC, which are generally not required for standard server operation. |
+| `system` | `task_disable_uncommon_sound_drivers` | This task is designed to enhance system security by disabling a set of uncommon sound drivers. It updates the system configuration to block various USB-based sound drivers, which are typically unnecessary for server environments. |
+| `system` | `task_harden_file_system_settings` | This task strengthens file system security by configuring enhanced protections for hardlinks and symlinks, thereby reducing vulnerability to certain types of attacks. |
+| `system` | `task_harden_kernel_settings` | This task applies a series of security enhancements to the kernel settings. It ensures that crucial kernel parameters are configured to strengthen the system against various types of security threats and vulnerabilities. |
+| `system` | `task_harden_network_settings` | This task secures the network configuration by applying various IPv4 security settings, enhancing the system's defense against network-related exploits and vulnerabilities. |
+| `system` | `task_secure_sensible_file_permissions` | This task secures key system files by adjusting their ownership to root and setting strict permissions. It focuses on protecting configuration files, cron directories, user home directories, and other sensitive files, ensuring they are not accessible or modifiable by unauthorized users. |
+| `system` | `task_update_and_upgrade` | This task automates the process of updating and upgrading the system. |
+| `network` | `task_ssh_deactivate_root` | This task enhances SSH security by ensuring the 'PermitRootLogin' setting in the SSH configuration is set to 'no', thereby disabling direct SSH access for the root user. |
+| `network` | `task_ssh_random_port` | This task increases SSH security by changing its listening port to a randomly selected port. The script generates a random port number and prompts the user for confirmation before applying the change to the SSH configuration. |
+| `user` | `task_add_random_user_password_with_sudo_privileges` | This task creates a new user with sudo privileges. It prompts the user to approve a randomly generated username and password, ensuring these credentials are safely recorded before proceeding. The new user is added to the system with sudo access, enhancing administrative flexibility while maintaining security. |
+| `firewall` | `task_ufw_settings` | This task configures the Uncomplicated Firewall (UFW) by setting default policies to deny incoming and outgoing traffic, while specifically allowing HTTP, HTTPS, DNS, and SSH (on the configured port). |
+| `scheduler` | `task_sheduler_auto_update_upgrade` | This task sets up and configures automatic updates and upgrades for the system. |
+| `tool_secure` | `task_add_fail2ban` | This task configures Fail2Ban with basic settings to protect against unauthorized access, particularly on the SSH service. |
+| `tool_secure` | `task_add_knockd` | This task configures port knocking for enhanced SSH security using knockd. It generates random sequences for opening and closing SSH port access, and prompts for user approval of these sequences. Once approved, the sequences are applied to the knockd configuration, creating an additional security layer requiring specific 'knocks' to gain access. |
+| `tool` | `task_delete_unnecessary_tools` | This task removes unnecessary or potentially insecure packages, improving system security by eliminating tools that could be exploited. |
+| `tool` | `task_add_vim` | This task installs the Vim text editor on the system, providing a versatile and powerful tool for file editing. |
 
 
 ## Contributing
