@@ -209,6 +209,8 @@ execute_task() {
 
   log_task "$task_name"
 
+  mark_task_running "$task_name"
+
   # 01 - Check if Task Previously Succeeded
   if check_task_failed_previously "$task_name"; then
     echo "The task $task_name has already succeeded previously. It is being skipped."
@@ -340,57 +342,104 @@ execute_and_check() {
 #                    does not exist.
 ###
 check_task_failed_previously() {
-    local task_name=$1
-    if [ -f "$STATUS_FILE" ]; then
-        grep -q "^$task_name:ok$" "$STATUS_FILE"
-        return $?
-    fi
-    return "$NOK"
+  local task_name=$1
+
+  if [ -f "$STATUS_FILE" ]; then
+    grep -q "^$task_name:ok$" "$STATUS_FILE"
+    return $?
+  fi
+  return "$NOK"
 }
+
+
+### Mark Task as Running
+#
+# Function..........: mark_task_running
+# Description.......: Marks a specified task as 'running' in the STATUS_FILE.
+#                     If an entry for the task does not exist or if the task is 
+#                     not already marked with 'running', 'ko', or 'ok', it adds a 
+#                     new 'running' status entry for the task.
+# Parameters........: 
+#               - $1: The name of the task to be marked as running.
+# Returns...........: None.
+# Side Effects......: Modifies the STATUS_FILE by adding the status of the task as 'running'.
+#                     Does not duplicate entries if the task is already marked with
+#                     any status ('running', 'ko', or 'ok').
+###
+mark_task_running() {
+  local task_name=$1
+
+  if [ ! -f "$STATUS_FILE" ]; then
+    echo "Error: The file $STATUS_FILE does not exist."
+    return $NOK
+  fi
+
+  if ! grep -qE "^$task_name:(running|ko|ok)$" "$STATUS_FILE"; then
+    echo "$task_name:running" >> "$STATUS_FILE"
+  fi
+}
+
 
 ### Mark Task as Successful
 #
 # Function..........: mark_task_ok
-# Description.......: Marks a specified task as successful ('ok') in the STATUS_FILE. 
-#                     If an entry for the task with a 'ko' status exists, it updates 
-#                     the entry to 'ok'. If no such entry exists, it adds a new 'ok' 
-#                     status entry for the task.
+# Description.......: Marks a specified task as successful ('ok') in the STATUS_FILE.
+#                     If an entry for the task with a 'ko' or 'running' status exists, 
+#                     it updates the entry to 'ok'. If no such entry exists, or if 
+#                     the task is not already marked with 'ko' or 'running', it adds 
+#                     a new 'ok' status entry for the task.
 # Parameters........: 
 #               - $1: The name of the task to be marked as successful.
 # Returns...........: None.
 # Side Effects......: Modifies the STATUS_FILE by updating or adding the status of the task.
-#                     If the task had a 'ko' status, it is changed to 'ok'. If the task was 
-#                     not previously listed, it is added with an 'ok' status.
+#                     If the task had a 'ko' or 'running' status, it is changed to 'ok'. 
+#                     If the task was not previously listed or had a different status, 
+#                     it is added with an 'ok' status.
 ###
 mark_task_ok() {
-  
-    local task_name=$1
+  local task_name=$1
 
-    if grep -q "^$task_name:ko$" "$STATUS_FILE"; then
-      sed -i "/^$task_name:ko$/c\\$task_name:ok" "$STATUS_FILE"
-    else
-      echo "$task_name:ok" >> "$STATUS_FILE"
-    fi
+  if [ ! -f "$STATUS_FILE" ]; then
+    echo "Error: The file $STATUS_FILE does not exist."
+    return $NOK
+  fi
+
+  sed -i "/^$task_name:\(ko\|running\)$/c\\$task_name:ok" "$STATUS_FILE"
+
+  if [ $? -ne 0 ]; then
+    echo "$task_name:ok" >> "$STATUS_FILE"
+  fi
 }
 
-### Mark Task as Failed
+### Mark Task as Unsuccessful
 #
 # Function..........: mark_task_ko
-# Description.......: Marks a specified task as failed ('ko') in the STATUS_FILE.
-#                     Adds a new 'ko' status entry for the task. This function does not 
-#                     check for existing entries of the task, it simply appends the failed 
-#                     status to the file. 
+# Description.......: Marks a specified task as unsuccessful ('ko') in the STATUS_FILE.
+#                     If an entry for the task with an 'ok' or 'running' status exists,
+#                     it updates the entry to 'ko'. If no such entry exists, or if 
+#                     the task is not already marked with 'ok' or 'running', it adds 
+#                     a new 'ko' status entry for the task.
 # Parameters........: 
-#               - $1: The name of the task to be marked as failed.
+#               - $1: The name of the task to be marked as unsuccessful.
 # Returns...........: None.
-# Side Effects......: Modifies the STATUS_FILE by appending the status of the task.
-#                     If the task was previously marked as successful ('ok') or failed ('ko'), 
-#                     this function adds an additional 'ko' entry without modifying or 
-#                     removing the existing entries.
+# Side Effects......: Modifies the STATUS_FILE by updating or adding the status of the task.
+#                     If the task had an 'ok' or 'running' status, it is changed to 'ko'.
+#                     If the task was not previously listed or had a different status,
+#                     it is added with a 'ko' status.
 ###
 mark_task_ko() {
-    local task_name=$1
+  local task_name=$1
+
+  if [ ! -f "$STATUS_FILE" ]; then
+    echo "Error: The file $STATUS_FILE does not exist."
+    return $NOK
+  fi
+
+  sed -i "/^$task_name:\(ok\|running\)$/c\\$task_name:ko" "$STATUS_FILE"
+
+  if [ $? -ne 0 ]; then
     echo "$task_name:ko" >> "$STATUS_FILE"
+  fi
 }
 
 
