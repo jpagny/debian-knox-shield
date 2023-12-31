@@ -24,7 +24,6 @@ mandatory|network/ssh_random_port.sh
 mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
 mandatory|tool_secure/knockd.sh
-mandatory|tool_secure/chkrootkit.sh
 mandatory|tool_secure/aide.sh
 
 # Manage variety of tools
@@ -41,4 +40,5 @@ mandatory|network/ssh_deactivate_root.sh
 mandatory|system/disable_root.sh
 
 # Report
+mandatory|tool_report/chkrootkit.sh
 mandatory|tool_report/lynis.sh
