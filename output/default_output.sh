@@ -2504,6 +2504,22 @@ run_action_add_knockd() {
 
   done
 
+  while true; do
+    # Log to launch knock for opening
+    local open_sequence_no_commas=$(echo $open_sequence | tr ',' ' ')
+    echo "To launch knock for opening: knock -d 10 -v <ip> $open_sequence_no_commas"
+
+    # Log to launch knock for closing
+    local close_sequence_no_commas=$(echo $close_sequence | tr ',' ' ')
+    echo "To launch knock for closing: knock -d 10 -v <ip> $close_sequence_no_commas"
+
+    # Ask if the user has copied the sequence into a file
+    read -p "Have you copied the sequence into a file? (y/n): " answer
+    if [[ $answer == "y" || $answer == "Y" ]]; then
+      break
+    fi
+  done
+
   log_info "Port knocking configuration for knockd completed successfully."
 
   return "$OK"
