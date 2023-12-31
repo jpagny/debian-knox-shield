@@ -134,13 +134,15 @@ run_action_add_docker-ce() {
   local user_password
   local confirmation
 
+  log_info "Adding a new user for Docker"
+
+  # Ask for username approval and capture the returned username
+  new_user=$(ask_for_username_approval)
+
+  # Ask for password approval and capture the returned password
+  user_password=$(ask_for_password_approval)
+
   while true; do
-
-    # Ask for username approval and capture the returned username
-    new_user=$(ask_for_username_approval)
-
-    # Ask for password approval and capture the returned password
-    user_password=$(ask_for_password_approval)
     
     # Is it safe to show credentials ? 
     echo "Please make sure you have recorded this information safely:"

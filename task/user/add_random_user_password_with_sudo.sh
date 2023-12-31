@@ -83,13 +83,13 @@ run_action_add_random_user_password_with_sudo_privileges() {
   local password
   local confirmation
 
+  # Ask for username approval and capture the returned username
+  username=$(ask_for_username_approval)
+
+  # Ask for password approval and capture the returned password
+  password=$(ask_for_password_approval)
+
   while true; do
-
-    # Ask for username approval and capture the returned username
-    username=$(ask_for_username_approval)
-
-    # Ask for password approval and capture the returned password
-    password=$(ask_for_password_approval)
     
     # Is it safe to show credentials ? 
     echo "Please make sure you have recorded this information safely:"
