@@ -28,9 +28,9 @@ mandatory|tool_secure/chkrootkit.sh
 mandatory|tool_secure/aide.sh
 
 # Manage variety of tools
-optional|tool/delete_unnecessary_tools.sh
-optional|tool/vim.sh
-mandatory|tool/docker-ce.sh
+optional|tool_util/delete_unnecessary_tools.sh
+optional|tool_util/vim.sh
+mandatory|tool_util/docker-ce.sh
 
 # Manage scheduler
 mandatory|scheduler/auto_update_upgrade.sh
@@ -41,4 +41,4 @@ mandatory|network/ssh_deactivate_root.sh
 mandatory|system/disable_root.sh
 
 # Report
-mandatory|tool_secure/lynis.sh
+mandatory|tool_report/lynis.sh

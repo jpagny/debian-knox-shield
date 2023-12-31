@@ -1894,13 +1894,13 @@ run_action_add_random_user_password_with_sudo_privileges() {
   local password
   local confirmation
 
+  # Ask for username approval and capture the returned username
+  username=$(ask_for_username_approval)
+
+  # Ask for password approval and capture the returned password
+  password=$(ask_for_password_approval)
+
   while true; do
-
-    # Ask for username approval and capture the returned username
-    username=$(ask_for_username_approval)
-
-    # Ask for password approval and capture the returned password
-    password=$(ask_for_password_approval)
     
     # Is it safe to show credentials ? 
     echo "Please make sure you have recorded this information safely:"
@@ -2812,7 +2812,7 @@ post_actions_add_aide() {
 # Run the task to add_aide
 task_add_aide
 
-#-------------- tool/delete_unnecessary_tools.sh - optional
+#-------------- tool_util/delete_unnecessary_tools.sh - optional
 
 # shellcheck source=/dev/null
 
@@ -2915,7 +2915,7 @@ post_actions_delete_unnecessary_tools() {
 
 # Run the task to delete unnecessary tools
 task_delete_unnecessary_tools
-#-------------- tool/vim.sh - optional
+#-------------- tool_util/vim.sh - optional
 # shellcheck source=/dev/null
 
 ### Install Vim Text Editor
@@ -2971,7 +2971,7 @@ run_action_add_vim() {
 
 # Run the task to add vim
 task_add_vim
-#-------------- tool/docker-ce.sh - mandatory
+#-------------- tool_util/docker-ce.sh - mandatory
 
 # shellcheck source=/dev/null
 
@@ -3581,7 +3581,7 @@ run_action_system_disable_root() {
 
 # Run the task to disable root account
 task_system_disable_root
-#-------------- tool_secure/lynis.sh - mandatory
+#-------------- tool_report/lynis.sh - mandatory
 
 # shellcheck source=/dev/null
 
