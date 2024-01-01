@@ -3300,7 +3300,7 @@ check_prerequisites_close_ssh_port() {
 ###
 run_action_close_ssh_port() {
 
-    local script_name="close_ssh_port.sh"
+    local script_name="close_ssh_port"
     local script_path="/usr/local/sbin/$script_name"
     local log_file="/var/log/close_ssh_port.log"
 
@@ -3349,18 +3349,27 @@ create_close_ssh_port_script() {
 
 sshd_conf="/etc/ssh/sshd_config"
 PORT=\$(grep "^Port " "\$sshd_conf" | cut -d ' ' -f2)
-IPTABLES=\$(which iptables)
-NETSTAT=\$(which netstat)
+IPTABLES=/sbin/iptables
+NETSTAT=/bin/netstat
+
+echo "\$(date) : Start to check status port $PORT" >> "/var/log/close_ssh_port.log"
 
 # Check if the port is not in ESTABLISHED state
 if ! \$NETSTAT -tna | grep ":\$PORT " | grep 'ESTABLISHED'; then
 
+    echo "\$(date) : There is not user connected in this port. Let's go to close this port" >> "/var/log/close_ssh_port.log"
+
     # List the iptables rules for the specified port
-    readarray -t rules < <(sudo \$IPTABLES -L INPUT -n --line-numbers | grep "tcp dpt:\$PORT" | awk '{print \$1}')
+    readarray -t rules < <(\$IPTABLES -L INPUT -n --line-numbers | grep "tcp dpt:\$PORT" | awk '{print \$1}')
+
+    echo "\$(date) : Load rules iptables in readarray successfully" >> "/var/log/close_ssh_port.log"
+    echo "\$(date) : Rules to delete are \${rules[*]}" >> "$log_file"
 
     # Remove the rules in reverse order
     for (( idx=\${#rules[@]}-1 ; idx>=0 ; idx-- )) ; do
+        echo "test 1" >> "/var/log/close_ssh_port.log"
         rule_number=\${rules[idx]}
+        echo "test 2" >> "/var/log/close_ssh_port.log"
         \$IPTABLES -D INPUT \$rule_number
         echo "\$(date) : Rule for port \$PORT removed, rule number \$rule_number" >> "$log_file"
     done

@@ -83,7 +83,7 @@ check_prerequisites_close_ssh_port() {
 ###
 run_action_close_ssh_port() {
 
-    local script_name="close_ssh_port.sh"
+    local script_name="close_ssh_port"
     local script_path="/usr/local/sbin/$script_name"
     local log_file="/var/log/close_ssh_port.log"
 
@@ -132,14 +132,14 @@ create_close_ssh_port_script() {
 
 sshd_conf="/etc/ssh/sshd_config"
 PORT=\$(grep "^Port " "\$sshd_conf" | cut -d ' ' -f2)
-IPTABLES=\$(which iptables)
-NETSTAT=\$(which netstat)
+IPTABLES=/sbin/iptables
+NETSTAT=/bin/netstat
 
 # Check if the port is not in ESTABLISHED state
 if ! \$NETSTAT -tna | grep ":\$PORT " | grep 'ESTABLISHED'; then
 
     # List the iptables rules for the specified port
-    readarray -t rules < <(sudo \$IPTABLES -L INPUT -n --line-numbers | grep "tcp dpt:\$PORT" | awk '{print \$1}')
+    readarray -t rules < <(\$IPTABLES -L INPUT -n --line-numbers | grep "tcp dpt:\$PORT" | awk '{print \$1}')
 
     # Remove the rules in reverse order
     for (( idx=\${#rules[@]}-1 ; idx>=0 ; idx-- )) ; do
