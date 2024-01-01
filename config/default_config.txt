@@ -30,6 +30,7 @@ mandatory|tool_secure/aide.sh
 optional|tool_util/delete_unnecessary_tools.sh
 optional|tool_util/vim.sh
 mandatory|tool_util/docker-ce.sh
+mandatory|tool_util/net-tools.sh
 
 # Manage scheduler
 mandatory|scheduler/auto_update_upgrade.sh
