@@ -34,6 +34,7 @@ mandatory|tool_util/net-tools.sh
 
 # Manage scheduler
 mandatory|scheduler/auto_update_upgrade.sh
+mandatory|scheduler/close_ssh_port.sh
 mandatory|scheduler/aide_report_mail.sh
 
 # End 

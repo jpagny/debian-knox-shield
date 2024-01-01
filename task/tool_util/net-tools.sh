@@ -51,7 +51,7 @@ task_add_net-tools() {
 run_action_add_net-tools() {
 
 # install vim package
-  if ! install_package "net_tools"; then
+  if ! install_package "net-tools"; then
     return "$NOK"
   fi
 }
