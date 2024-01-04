@@ -57,6 +57,11 @@ task_add_docker-ce() {
 ##
 check_prerequisites_add_docker-ce() {
 
+  # Install jq package
+  if ! install_package "jq"; then
+    return "$NOK"
+  fi
+
   # install pwgen package
   if ! install_package "pwgen"; then
     return "$NOK"
@@ -209,8 +214,51 @@ post_actions_add_docker-ce() {
 
   log_info "Docker hello-world container ran successfully. Docker is functioning correctly."
 
+  # Enhancing security: enable User Namespaces
+  setup_docker_user_namespaces
+
   return "$OK"
 }
+
+# Function..........: setup_docker_user_namespaces
+# Description.......: Configures Docker to use User Namespaces for enhanced container isolation. 
+#                     This function modifies the Docker daemon configuration to map container user and group IDs 
+#                     to a separate range of IDs on the host, improving security by limiting the impact of a container 
+#                     compromise.
+# Parameters........: 
+#               - None. The function updates the Docker daemon configuration without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the Docker daemon is successfully reconfigured and restarted.
+#               - 1 (NOK): If there is an error in reconfiguring or restarting the Docker daemon.
+##
+setup_docker_user_namespaces() {
+
+  log_info "Configuring Docker to use User Namespaces..."
+
+  # Create or modify the Docker daemon configuration file
+  DAEMON_CONFIG_FILE="/etc/docker/daemon.json"
+
+  if [ ! -f "$DAEMON_CONFIG_FILE" ]; then
+    echo '{}' > "$DAEMON_CONFIG_FILE"
+  fi
+
+  if ! jq '. + {"userns-remap": "default"}' "$DAEMON_CONFIG_FILE" > "$DAEMON_CONFIG_FILE.tmp" || 
+     ! mv "$DAEMON_CONFIG_FILE.tmp" "$DAEMON_CONFIG_FILE"; then
+    log_error "Failed to update Docker daemon configuration for User Namespaces."
+    return "$NOK"
+  fi
+
+  # Restart the Docker service to apply the changes
+  if ! systemctl restart docker; then
+    log_error "Failed to restart Docker service after configuring User Namespaces."
+    return "$NOK"
+  fi
+
+  log_info "Docker configured to use User Namespaces. Service restarted successfully."
+
+  return "$OK"
+}
+
 
 # Run the task to add_docker
 task_add_docker-ce

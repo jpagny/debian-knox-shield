@@ -2918,6 +2918,11 @@ task_add_docker-ce() {
 ##
 check_prerequisites_add_docker-ce() {
 
+  # Install jq package
+  if ! install_package "jq"; then
+    return "$NOK"
+  fi
+
   # install pwgen package
   if ! install_package "pwgen"; then
     return "$NOK"
@@ -3070,8 +3075,51 @@ post_actions_add_docker-ce() {
 
   log_info "Docker hello-world container ran successfully. Docker is functioning correctly."
 
+  # Enhancing security: enable User Namespaces
+  setup_docker_user_namespaces
+
   return "$OK"
 }
+
+# Function..........: setup_docker_user_namespaces
+# Description.......: Configures Docker to use User Namespaces for enhanced container isolation. 
+#                     This function modifies the Docker daemon configuration to map container user and group IDs 
+#                     to a separate range of IDs on the host, improving security by limiting the impact of a container 
+#                     compromise.
+# Parameters........: 
+#               - None. The function updates the Docker daemon configuration without additional parameters.
+# Returns...........: 
+#               - 0 (OK): If the Docker daemon is successfully reconfigured and restarted.
+#               - 1 (NOK): If there is an error in reconfiguring or restarting the Docker daemon.
+##
+setup_docker_user_namespaces() {
+
+  log_info "Configuring Docker to use User Namespaces..."
+
+  # Create or modify the Docker daemon configuration file
+  DAEMON_CONFIG_FILE="/etc/docker/daemon.json"
+
+  if [ ! -f "$DAEMON_CONFIG_FILE" ]; then
+    echo '{}' > "$DAEMON_CONFIG_FILE"
+  fi
+
+  if ! jq '. + {"userns-remap": "default"}' "$DAEMON_CONFIG_FILE" > "$DAEMON_CONFIG_FILE.tmp" || 
+     ! mv "$DAEMON_CONFIG_FILE.tmp" "$DAEMON_CONFIG_FILE"; then
+    log_error "Failed to update Docker daemon configuration for User Namespaces."
+    return "$NOK"
+  fi
+
+  # Restart the Docker service to apply the changes
+  if ! systemctl restart docker; then
+    log_error "Failed to restart Docker service after configuring User Namespaces."
+    return "$NOK"
+  fi
+
+  log_info "Docker configured to use User Namespaces. Service restarted successfully."
+
+  return "$OK"
+}
+
 
 # Run the task to add_docker
 task_add_docker-ce
@@ -3352,24 +3400,15 @@ PORT=\$(grep "^Port " "\$sshd_conf" | cut -d ' ' -f2)
 IPTABLES=/sbin/iptables
 NETSTAT=/bin/netstat
 
-echo "\$(date) : Start to check status port $PORT" >> "/var/log/close_ssh_port.log"
-
 # Check if the port is not in ESTABLISHED state
 if ! \$NETSTAT -tna | grep ":\$PORT " | grep 'ESTABLISHED'; then
-
-    echo "\$(date) : There is not user connected in this port. Let's go to close this port" >> "/var/log/close_ssh_port.log"
 
     # List the iptables rules for the specified port
     readarray -t rules < <(\$IPTABLES -L INPUT -n --line-numbers | grep "tcp dpt:\$PORT" | awk '{print \$1}')
 
-    echo "\$(date) : Load rules iptables in readarray successfully" >> "/var/log/close_ssh_port.log"
-    echo "\$(date) : Rules to delete are \${rules[*]}" >> "$log_file"
-
     # Remove the rules in reverse order
     for (( idx=\${#rules[@]}-1 ; idx>=0 ; idx-- )) ; do
-        echo "test 1" >> "/var/log/close_ssh_port.log"
         rule_number=\${rules[idx]}
-        echo "test 2" >> "/var/log/close_ssh_port.log"
         \$IPTABLES -D INPUT \$rule_number
         echo "\$(date) : Rule for port \$PORT removed, rule number \$rule_number" >> "$log_file"
     done
