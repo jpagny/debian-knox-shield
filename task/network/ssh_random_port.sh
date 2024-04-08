@@ -81,7 +81,9 @@ run_action_ssh_random_port() {
   if grep -q "^#task_ssh_random_port" "$configCredentials"; then
 
     portNumber=$(grep "port_number" "$configCredentials" | cut -d '=' -f 2)
-    log_info "Using predefined port from credentials: $portNumber"
+    sed -i "s/^#Port 22/Port $portNumber/" /etc/ssh/sshd_config
+
+    log_info "SSH is now listening on port: $random_port"
 
   else
 
