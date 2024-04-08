@@ -79,32 +79,44 @@ check_prerequisites_add_random_user_password_with_sudo_privileges() {
 ##
 run_action_add_random_user_password_with_sudo_privileges() {
 
+  local configCredentials="$(dirname "$0")/../config/credentials.txt"
   local username
   local password
   local confirmation
 
-  # Ask for username approval and capture the returned username
-  username=$(ask_for_username_approval)
+  if grep -q "^#task_add_random_user_password_with_sudo_privileges" "$configCredentials"; then
+  
+    # Extract username and password from the credentials file
+    username=$(grep "username" "$configCredentials" | cut -d '=' -f 2)
+    password=$(grep "password" "$configCredentials" | cut -d '=' -f 2)
+    log_info "Using predefined user credentials from credentials file."
 
-  # Ask for password approval and capture the returned password
-  password=$(ask_for_password_approval)
+  else
 
-  while true; do
-    
-    # Is it safe to show credentials ? 
-    echo "Please make sure you have recorded this information safely:"
-    echo "Username: $username"
-    echo "Password: $password"
 
-    # Ask for confirmation
-    read -p "Have you saved the username and password? (y/n): " confirmation
-    if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
-      break
-    else
-      echo "Let's try again..."
-    fi
+    # Ask for username approval and capture the returned username
+    username=$(ask_for_username_approval)
 
-  done
+    # Ask for password approval and capture the returned password
+    password=$(ask_for_password_approval)
+
+    while true; do
+      
+      # Is it safe to show credentials ? 
+      echo "Please make sure you have recorded this information safely:"
+      echo "Username: $username"
+      echo "Password: $password"
+
+      # Ask for confirmation
+      read -p "Have you saved the username and password? (y/n): " confirmation
+      if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
+        break
+      else
+        echo "Let's try again..."
+      fi
+
+    done
+  fi
 
   # Use the useradd command to create the user without a password prompt
   adduser --gecos "" --disabled-password "$username"

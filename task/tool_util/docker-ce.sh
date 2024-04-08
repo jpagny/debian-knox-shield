@@ -135,34 +135,46 @@ run_action_add_docker-ce() {
 
   log_info "Securing the Docker installation..."
 
+  local configCredentials="$(dirname "$0")/../config/credentials.txt"
   local new_user
   local user_password
   local confirmation
 
   log_info "Adding a new user for Docker"
 
-  # Ask for username approval and capture the returned username
-  new_user=$(ask_for_username_approval)
+  if grep -q "^#task_add_docker_user" "$configCredentials"; then
 
-  # Ask for password approval and capture the returned password
-  user_password=$(ask_for_password_approval)
-
-  while true; do
+    # Extract username and password from the credentials file
+    new_user=$(grep "docker_username" "$configCredentials" | cut -d '=' -f 2 | tr -d ' ')
+    user_password=$(grep "docker_password" "$configCredentials" | cut -d '=' -f 2 | tr -d ' ')
+    log_info "Using predefined Docker user credentials from credentials file."
     
-    # Is it safe to show credentials ? 
-    echo "Please make sure you have recorded this information safely:"
-    echo "Username: $new_user"
-    echo "Password: $user_password"
+  else
 
-    # Ask for confirmation
-    read -p "Have you saved the username and password? (y/n): " confirmation
-    if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
-      break
-    else
-      echo "Let's try again..."
-    fi
+    # Ask for username approval and capture the returned username
+    new_user=$(ask_for_username_approval)
 
-  done
+    # Ask for password approval and capture the returned password
+    user_password=$(ask_for_password_approval)
+
+    while true; do
+      
+      # Is it safe to show credentials ? 
+      echo "Please make sure you have recorded this information safely:"
+      echo "Username: $new_user"
+      echo "Password: $user_password"
+
+      # Ask for confirmation
+      read -p "Have you saved the username and password? (y/n): " confirmation
+      if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
+        break
+      else
+        echo "Let's try again..."
+      fi
+
+    done
+
+  fi
 
   # Create the user with the provided password
   log_info "Creating user $new_user..."
