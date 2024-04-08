@@ -74,25 +74,35 @@ check_prerequisites_ssh_random_port() {
 #
 ###
 run_action_ssh_random_port() {
+  local configCredentials="$(dirname "$0")/../config/credentials"
   local random_port
   local user_response
 
-  while true; do
-    random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
-    read -p "Use port $random_port for SSH? (y/n): " user_response
+  if grep -q "^#task_ssh_random_port" "$configCredentials"; then
 
-    case $user_response in
-      [Yy]* ) 
-        sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
-        log_info "SSH is now listening on port: $random_port"
-        break;;
-      [Nn]* ) 
-        log_debug "Skipping port $random_port."
-        continue;;
-      * ) 
-        echo "Please answer yes or no.";;
-    esac
-  done
+    portNumber=$(grep "port_number" "$configCredentials" | cut -d ' ' -f 3)
+    log_info "Using predefined port from credentials: $portNumber"
+
+  else
+
+    while true; do
+      random_port=$(shuf -i 1024-65535 -n 1)
+      read -p "Use port $random_port for SSH? (y/n): " user_response
+
+      case $user_response in
+        [Yy]* ) 
+          sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
+          log_info "SSH is now listening on port: $random_port"
+          break;;
+        [Nn]* ) 
+          log_debug "Skipping port $random_port."
+          continue;;
+        * ) 
+          echo "Please answer yes or no.";;
+      esac
+    done
+
+  fi
 }
 
 ### Post Actions for SSH Random Port Configuration

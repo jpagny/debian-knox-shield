@@ -1,13 +1,6 @@
 #!/bin/bash
 
 
-#-------------- 00_variable_global.sh
-
-OK=0
-NOK=1
-
-DEBUG_MODE=0
-
 #-------------- 01_logger.sh
 
 # Define log level colors
@@ -168,6 +161,13 @@ log_post_actions() {
   echo -e "${LOG_COLOR_POST_ACTION}  [POST ACTIONS]: $1${LOG_COLOR_END}" >&2
 }
 
+
+#-------------- 00_variable_global.sh
+
+OK=0
+NOK=1
+
+DEBUG_MODE=0
 
 #-------------- 02_execute_task.sh
 
@@ -443,6 +443,31 @@ mark_task_ko() {
 }
 
 
+#-------------- 04_option.sh
+
+### Process Command Line Arguments for Debug Mode
+#
+# Description.......: This script segment checks for the presence of the '--debug' flag in the command line arguments.
+#                     If '--debug' is found, the script sets DEBUG_MODE to 1, enabling debug functionality.
+#                     This is useful for turning on additional logging or diagnostic output in the script.
+# Arguments.........: 
+#               - --debug (optional): Flag to enable debug mode.
+# Returns...........: None directly. Sets the global variable DEBUG_MODE to 1 if '--debug' is present.
+# Usage.............: Place this snippet at the beginning of a script to enable debug mode based on command line input.
+# 
+# Example...........: `./script.sh --debug` will enable debug mode by setting DEBUG_MODE to 1.
+#
+###
+DEBUG_MODE=0
+
+for arg in "$@"; do
+
+  if [ "$arg" = "--debug" ]; then
+    DEBUG_MODE=1
+  fi
+
+done
+
 #-------------- 03_utils.sh
 
 # shellcheck source=/dev/null
@@ -576,31 +601,6 @@ ask_for_password_approval() {
     fi
   done
 }
-
-#-------------- 04_option.sh
-
-### Process Command Line Arguments for Debug Mode
-#
-# Description.......: This script segment checks for the presence of the '--debug' flag in the command line arguments.
-#                     If '--debug' is found, the script sets DEBUG_MODE to 1, enabling debug functionality.
-#                     This is useful for turning on additional logging or diagnostic output in the script.
-# Arguments.........: 
-#               - --debug (optional): Flag to enable debug mode.
-# Returns...........: None directly. Sets the global variable DEBUG_MODE to 1 if '--debug' is present.
-# Usage.............: Place this snippet at the beginning of a script to enable debug mode based on command line input.
-# 
-# Example...........: `./script.sh --debug` will enable debug mode by setting DEBUG_MODE to 1.
-#
-###
-DEBUG_MODE=0
-
-for arg in "$@"; do
-
-  if [ "$arg" = "--debug" ]; then
-    DEBUG_MODE=1
-  fi
-
-done
 
 
 #-------------- system/configure_adduser.sh - mandatory
@@ -2003,25 +2003,35 @@ check_prerequisites_ssh_random_port() {
 #
 ###
 run_action_ssh_random_port() {
+  local configCredentials="$(dirname "$0")/../config/credentials"
   local random_port
   local user_response
 
-  while true; do
-    random_port=$(shuf -i 1024-65535 -n 1) # Generate a random port between 1024 and 65535
-    read -p "Use port $random_port for SSH? (y/n): " user_response
+  if grep -q "^#task_ssh_random_port" "$configCredentials"; then
 
-    case $user_response in
-      [Yy]* ) 
-        sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
-        log_info "SSH is now listening on port: $random_port"
-        break;;
-      [Nn]* ) 
-        log_debug "Skipping port $random_port."
-        continue;;
-      * ) 
-        echo "Please answer yes or no.";;
-    esac
-  done
+    portNumber=$(grep "port_number" "$configCredentials" | cut -d ' ' -f 3)
+    log_info "Using predefined port from credentials: $portNumber"
+
+  else
+
+    while true; do
+      random_port=$(shuf -i 1024-65535 -n 1)
+      read -p "Use port $random_port for SSH? (y/n): " user_response
+
+      case $user_response in
+        [Yy]* ) 
+          sed -i "s/^#Port 22/Port $random_port/" /etc/ssh/sshd_config
+          log_info "SSH is now listening on port: $random_port"
+          break;;
+        [Nn]* ) 
+          log_debug "Skipping port $random_port."
+          continue;;
+        * ) 
+          echo "Please answer yes or no.";;
+      esac
+    done
+
+  fi
 }
 
 ### Post Actions for SSH Random Port Configuration
@@ -2159,6 +2169,8 @@ run_action_ufw_settings() {
     ufw allow in 53
 
     # Allow SSH port
+    ufw allow in 22/tcp
+    ufw allow out 22/tcp
     ufw allow in $ssh_port/tcp
     ufw allow out $ssh_port/tcp
 
