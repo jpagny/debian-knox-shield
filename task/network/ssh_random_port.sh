@@ -74,13 +74,13 @@ check_prerequisites_ssh_random_port() {
 #
 ###
 run_action_ssh_random_port() {
-  local configCredentials="$(dirname "$0")/../config/credentials"
+  local configCredentials="$(dirname "$0")/../config/credentials.txt"
   local random_port
   local user_response
 
   if grep -q "^#task_ssh_random_port" "$configCredentials"; then
 
-    portNumber=$(grep "port_number" "$configCredentials" | cut -d ' ' -f 3)
+    portNumber=$(grep "port_number" "$configCredentials" | cut -d '=' -f 2)
     log_info "Using predefined port from credentials: $portNumber"
 
   else

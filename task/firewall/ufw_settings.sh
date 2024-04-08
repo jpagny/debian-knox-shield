@@ -103,8 +103,6 @@ run_action_ufw_settings() {
     ufw allow in 53
 
     # Allow SSH port
-    ufw allow in 22/tcp
-    ufw allow out 22/tcp
     ufw allow in $ssh_port/tcp
     ufw allow out $ssh_port/tcp
 
