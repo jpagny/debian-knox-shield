@@ -27,10 +27,12 @@ mandatory|tool_secure/knockd.sh
 mandatory|tool_secure/aide.sh
 
 # Manage variety of tools
+mandatory|tool_util/mail-server.sh
 optional|tool_util/delete_unnecessary_tools.sh
 optional|tool_util/vim.sh
 mandatory|tool_util/docker-ce.sh
 mandatory|tool_util/net-tools.sh
+mandatory|tool_util/davfs2.sh
 
 # Manage scheduler
 mandatory|scheduler/auto_update_upgrade.sh
