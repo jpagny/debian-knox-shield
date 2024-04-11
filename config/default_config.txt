@@ -15,10 +15,10 @@ mandatory|system/disable_uncommon_input_drivers.sh
 mandatory|system/disable_uncommon_firewire.sh
 
 # Manage user
-mandatory|user/add_random_user_password_with_sudo.sh
+mandatory|user/add_user_password_with_sudo.sh
 
 # Manage network
-mandatory|network/ssh_random_port.sh
+mandatory|network/ssh_change_port.sh
 
 # Manage tools related to security
 mandatory|firewall/ufw_settings.sh
