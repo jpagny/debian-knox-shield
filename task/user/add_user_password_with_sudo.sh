@@ -78,22 +78,33 @@ check_prerequisites_add_user_password_with_sudo_privileges() {
 # Output............: Logs the successful addition of a new user with sudo privileges.
 ##
 run_action_add_user_password_with_sudo_privileges() {
-
+  
   local configCredentials="$(dirname "$0")/../config/credentials.txt"
+  local startProcessing=false
   local username
   local password
   local confirmation
 
-  if grep -q "^#task_add_user_password_with_sudo_privileges" "$configCredentials"; then
-  
-    # Extract username and password from the credentials file
-    username=$(grep "username" "$configCredentials" | cut -d '=' -f 2)
-    password=$(grep "password" "$configCredentials" | cut -d '=' -f 2)
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == "#task_add_user_password_with_sudo_privileges" ]]; then
+      startProcessing=true
+      continue
+    elif [[ "$line" == "#task_"* && $startProcessing == true ]]; then
+      break
+    fi
+    
+    if $startProcessing; then
+      if [[ "$line" =~ ^username= ]]; then
+        username="${line#*=}"
+      elif [[ "$line" =~ ^password= ]]; then
+        password="${line#*=}"
+      fi
+    fi
+  done < "$configCredentials"
+
+  if [ -n "$username" ] && [ -n "$password" ]; then
     log_info "Using predefined user credentials from credentials file."
-
   else
-
-
     # Ask for username approval and capture the returned username
     username=$(ask_for_username_approval)
 
@@ -101,7 +112,6 @@ run_action_add_user_password_with_sudo_privileges() {
     password=$(ask_for_password_approval)
 
     while true; do
-      
       # Is it safe to show credentials ? 
       echo "Please make sure you have recorded this information safely:"
       echo "Username: $username"
@@ -114,7 +124,6 @@ run_action_add_user_password_with_sudo_privileges() {
       else
         echo "Let's try again..."
       fi
-
     done
   fi
 
