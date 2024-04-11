@@ -136,53 +136,46 @@ run_action_add_docker-ce() {
   log_info "Securing the Docker installation..."
 
   local configCredentials="$(dirname "$0")/../config/credentials.txt"
-  local new_user
-  local user_password
+  local docker_user
+  local docker_password
   local confirmation
 
   log_info "Adding a new user for Docker"
 
-  if grep -q "^#task_add_docker-ce" "$configCredentials"; then
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == "#task_add_docker-ce" ]]; then
+      startProcessing=true
+      continue
+    elif [[ "$line" == "#task_"* && $startProcessing == true ]]; then
+      break
+    fi
 
-    # Extract username and password from the credentials file
-    new_user=$(grep "docker_username" "$configCredentials" | cut -d '=' -f 2 | tr -d ' ')
-    user_password=$(grep "docker_password" "$configCredentials" | cut -d '=' -f 2 | tr -d ' ')
-    log_info "Using predefined Docker user credentials from credentials file."
-    
-  else
-
-    # Ask for username approval and capture the returned username
-    new_user=$(ask_for_username_approval)
-
-    # Ask for password approval and capture the returned password
-    user_password=$(ask_for_password_approval)
-
-    while true; do
-      
-      # Is it safe to show credentials ? 
-      echo "Please make sure you have recorded this information safely:"
-      echo "Username: $new_user"
-      echo "Password: $user_password"
-
-      # Ask for confirmation
-      read -p "Have you saved the username and password? (y/n): " confirmation
-      if [[ "$confirmation" == "y" || "$confirmation" == "Y" ]]; then
-        break
-      else
-        echo "Let's try again..."
+    if $startProcessing; then
+      if [[ "$line" =~ ^docker_username= ]]; then
+        docker_user="${line#*=}"
+      elif [[ "$line" =~ ^docker_password= ]]; then
+        docker_password="${line#*=}"
       fi
+    fi
+  done < "$configCredentials"
 
-    done
+  if [ -n "$docker_user" ] && [ -n "$docker_password" ]; then
+    log_info "Using predefined Docker user credentials from credentials file."
+  else
+    log_info "Prompting for new Docker user credentials..."
 
+    # Substitute these with your actual methods for collecting input
+    docker_user=$(ask_for_username_approval)
+    docker_password=$(ask_for_password_approval)
   fi
 
   # Create the user with the provided password
-  log_info "Creating user $new_user..."
+  log_info "Creating user $docker_user..."
   # Use the useradd command to create the user without a password prompt
-  adduser --gecos "" --disabled-password "$new_user"
+  adduser --gecos "" --disabled-password "$docker_user"
 
   # Set the password for the user securely using chpasswd
-  echo "$new_user:$user_password" | chpasswd
+  echo "$docker_user:$docker_password" | chpasswd
 
   # Add the new user to the Docker group
   # Create Docker user group, if not already exists
@@ -191,12 +184,12 @@ run_action_add_docker-ce() {
   fi
 
   # Add the confirmed or provided user to the Docker group
-  if ! usermod -aG docker "$new_user"; then
-    log_error "Failed to add $new_user to the Docker group."
+  if ! usermod -aG docker "$docker_user"; then
+    log_error "Failed to add $docker_user to the Docker group."
     return "$NOK"
   fi
 
-  log_info "User $new_user has been added to the Docker group successfully."
+  log_info "User $docker_user has been added to the Docker group successfully."
 
   return "$OK"
 }
