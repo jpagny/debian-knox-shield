@@ -69,16 +69,16 @@ check_prerequisites_add_user_password_with_sudo_privileges() {
   return "$OK"
 }
 
-### Run Action: Add Random User with Sudo Privileges
+### Run Action: Add New User with Sudo Privileges
 #
-# Function..........: run_action_add_random_user_password_with_sudo_privileges
+# Function..........: run_action_add_new_user_password_with_sudo_privileges
 # Description.......: Creates a new user with a username approved by the user, sets a strong, approved password, and grants sudo privileges.
 # Parameters........: None.
 # Returns...........: None.
 # Output............: Logs the successful addition of a new user with sudo privileges.
 ##
 run_action_add_user_password_with_sudo_privileges() {
-  
+
   local configCredentials="$(dirname "$0")/../config/credentials.txt"
   local startProcessing=false
   local username
