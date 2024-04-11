@@ -142,7 +142,7 @@ run_action_add_docker-ce() {
 
   log_info "Adding a new user for Docker"
 
-  if grep -q "^#task_add_docker_user" "$configCredentials"; then
+  if grep -q "^#task_add_docker-ce" "$configCredentials"; then
 
     # Extract username and password from the credentials file
     new_user=$(grep "docker_username" "$configCredentials" | cut -d '=' -f 2 | tr -d ' ')

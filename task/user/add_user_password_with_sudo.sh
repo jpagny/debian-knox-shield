@@ -84,7 +84,7 @@ run_action_add_user_password_with_sudo_privileges() {
   local password
   local confirmation
 
-  if grep -q "^#task_add_random_user_password_with_sudo_privileges" "$configCredentials"; then
+  if grep -q "^#task_add_user_password_with_sudo_privileges" "$configCredentials"; then
   
     # Extract username and password from the credentials file
     username=$(grep "username" "$configCredentials" | cut -d '=' -f 2)

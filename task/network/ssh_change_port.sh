@@ -78,7 +78,7 @@ run_action_ssh_change_port() {
   local random_port
   local user_response
 
-  if grep -q "^#task_ssh_random_port" "$configCredentials"; then
+  if grep -q "^#task_ssh_change_port" "$configCredentials"; then
 
     portNumber=$(grep "port_number" "$configCredentials" | cut -d '=' -f 2)
     sed -i "s/^#Port 22/Port $portNumber/" /etc/ssh/sshd_config
