@@ -18,7 +18,7 @@ source "$(dirname "$0")/../core/03_utils.sh"
 #               - 1 (NOK): If the configuration process fails.
 #
 ###
-ssh_add_banner() {
+task_ssh_add_banner() {
   
   local name="add_ssh_banner"
   local isRootRequired=true
@@ -85,4 +85,4 @@ post_actions_add_ssh_banner() {
 }
 
 # Execute the task to configure the SSH banner
-ssh_add_banner
+task_ssh_add_banner

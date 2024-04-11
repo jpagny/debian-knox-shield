@@ -19,6 +19,7 @@ mandatory|user/add_user_password_with_sudo.sh
 
 # Manage network
 mandatory|network/ssh_change_port.sh
+optional|ssh_add_banner.sh
 
 # Manage tools related to security
 mandatory|firewall/ufw_settings.sh
