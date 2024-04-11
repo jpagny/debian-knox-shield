@@ -17,10 +17,10 @@ source "$(dirname "$0")/../core/03_utils.sh"
 # Output............: Logs the progress and results of the user creation process.
 #
 ###
-task_add_random_user_password_with_sudo_privileges() {  
+task_add_user_password_with_sudo_privileges() {  
 
   # Add the user to the system with the generated username and the provided password
-  local name="add_random_user_password_with_sudo_privileges"
+  local name="add_user_password_with_sudo_privileges"
   local isRootRequired=true
   local prereq="check_prerequisites_$name"
   local actions="run_action_$name"
@@ -49,7 +49,7 @@ task_add_random_user_password_with_sudo_privileges() {
 # Output............: Logs the progress and results of the prerequisite check.
 #
 ###
-check_prerequisites_add_random_user_password_with_sudo_privileges() {
+check_prerequisites_add_user_password_with_sudo_privileges() {
 
   # install jq package
   if ! install_package "sudo"; then
@@ -77,7 +77,7 @@ check_prerequisites_add_random_user_password_with_sudo_privileges() {
 # Returns...........: None.
 # Output............: Logs the successful addition of a new user with sudo privileges.
 ##
-run_action_add_random_user_password_with_sudo_privileges() {
+run_action_add_user_password_with_sudo_privileges() {
 
   local configCredentials="$(dirname "$0")/../config/credentials.txt"
   local username
@@ -131,4 +131,4 @@ run_action_add_random_user_password_with_sudo_privileges() {
 }
 
 # Run the task to add a new user with sudo privileges
-task_add_random_user_password_with_sudo_privileges
+task_add_user_password_with_sudo_privileges
