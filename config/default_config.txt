@@ -41,8 +41,8 @@ mandatory|scheduler/auto_update_upgrade.sh
 mandatory|scheduler/aide_report_mail.sh
 
 # End 
-mandatory|network/ssh_deactivate_root.sh
-mandatory|system/disable_root.sh
+#mandatory|network/ssh_deactivate_root.sh
+#mandatory|system/disable_root.sh
 
 # Report
 mandatory|tool_report/chkrootkit.sh
