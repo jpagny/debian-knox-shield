@@ -24,7 +24,7 @@ optional|ssh_add_banner.sh
 # Manage tools related to security
 mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
-mandatory|tool_secure/knockd.sh
+#mandatory|tool_secure/knockd.sh
 mandatory|tool_secure/aide.sh
 
 # Manage variety of tools
@@ -37,7 +37,7 @@ mandatory|tool_util/davfs2.sh
 
 # Manage scheduler
 mandatory|scheduler/auto_update_upgrade.sh
-mandatory|scheduler/close_ssh_port.sh
+#mandatory|scheduler/close_ssh_port.sh
 mandatory|scheduler/aide_report_mail.sh
 
 # End 
