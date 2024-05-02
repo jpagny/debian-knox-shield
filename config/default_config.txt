@@ -1,15 +1,15 @@
 # Manage system
-mandatory|system/configure_adduser.sh
-mandatory|system/update_and_upgrade.sh
+#mandatory|system/configure_adduser.sh
+#mandatory|system/update_and_upgrade.sh
 #mandatory|system/configure_login_password.sh
 #mandatory|system/configure_password_quality.sh
-mandatory|system/secure_sensible_file_permissions.sh
-mandatory|system/harden_kernel_settings.sh
+#mandatory|system/secure_sensible_file_permissions.sh
+#mandatory|system/harden_kernel_settings.sh
 #mandatory|system/harden_network_settings.sh
-mandatory|system/harden_file_system_settings.sh
+#mandatory|system/harden_file_system_settings.sh
 mandatory|system/disable_uncommon_file_system.sh
-#mandatory|system/disable_uncommon_network_protocols.sh
-#mandatory|system/disable_uncommon_network_interfaces.sh
+mandatory|system/disable_uncommon_network_protocols.sh
+mandatory|system/disable_uncommon_network_interfaces.sh
 mandatory|system/disable_uncommon_sound_drivers.sh
 mandatory|system/disable_uncommon_input_drivers.sh
 mandatory|system/disable_uncommon_firewire.sh
