@@ -9,7 +9,7 @@
 #mandatory|system/harden_file_system_settings.sh
 #mandatory|system/disable_uncommon_file_system.sh
 #mandatory|system/disable_uncommon_network_protocols.sh
-#mandatory|system/disable_uncommon_network_interfaces.sh
+mandatory|system/disable_uncommon_network_interfaces.sh
 mandatory|system/disable_uncommon_sound_drivers.sh
 mandatory|system/disable_uncommon_input_drivers.sh
 mandatory|system/disable_uncommon_firewire.sh
