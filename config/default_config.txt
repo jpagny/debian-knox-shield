@@ -22,7 +22,7 @@ mandatory|network/ssh_change_port.sh
 optional|ssh_add_banner.sh
 
 # Manage tools related to security
-mandatory|firewall/ufw_settings.sh
+#mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
 #mandatory|tool_secure/knockd.sh
 mandatory|tool_secure/aide.sh
