@@ -1,18 +1,18 @@
 # Manage system
-mandatory|system/configure_adduser.sh
+#mandatory|system/configure_adduser.sh
 mandatory|system/update_and_upgrade.sh
-mandatory|system/configure_login_password.sh
-mandatory|system/configure_password_quality.sh
+#mandatory|system/configure_login_password.sh
+#mandatory|system/configure_password_quality.sh
 mandatory|system/secure_sensible_file_permissions.sh
 mandatory|system/harden_kernel_settings.sh
-mandatory|system/harden_network_settings.sh
+#mandatory|system/harden_network_settings.sh
 mandatory|system/harden_file_system_settings.sh
 mandatory|system/disable_uncommon_file_system.sh
-mandatory|system/disable_uncommon_network_protocols.sh
-mandatory|system/disable_uncommon_network_interfaces.sh
+#mandatory|system/disable_uncommon_network_protocols.sh
+#mandatory|system/disable_uncommon_network_interfaces.sh
 mandatory|system/disable_uncommon_sound_drivers.sh
-mandatory|system/disable_uncommon_input_drivers.sh
-mandatory|system/disable_uncommon_firewire.sh
+#mandatory|system/disable_uncommon_input_drivers.sh
+#mandatory|system/disable_uncommon_firewire.sh
 
 # Manage user
 mandatory|user/add_user_password_with_sudo.sh
@@ -36,7 +36,7 @@ mandatory|tool_util/net-tools.sh
 mandatory|tool_util/davfs2.sh
 
 # Manage scheduler
-mandatory|scheduler/auto_update_upgrade.sh
+#mandatory|scheduler/auto_update_upgrade.sh
 #mandatory|scheduler/close_ssh_port.sh
 #mandatory|scheduler/aide_report_mail.sh
 
@@ -46,4 +46,4 @@ mandatory|scheduler/auto_update_upgrade.sh
 
 # Report
 #mandatory|tool_report/chkrootkit.sh
-mandatory|tool_report/lynis.sh
+#mandatory|tool_report/lynis.sh
