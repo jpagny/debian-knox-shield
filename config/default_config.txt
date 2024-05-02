@@ -7,7 +7,7 @@
 #mandatory|system/harden_kernel_settings.sh
 #mandatory|system/harden_network_settings.sh
 #mandatory|system/harden_file_system_settings.sh
-mandatory|system/disable_uncommon_file_system.sh
+#mandatory|system/disable_uncommon_file_system.sh (problem with vps)
 #mandatory|system/disable_uncommon_network_protocols.sh
 mandatory|system/disable_uncommon_network_interfaces.sh
 mandatory|system/disable_uncommon_sound_drivers.sh
