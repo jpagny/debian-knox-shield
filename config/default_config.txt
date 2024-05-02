@@ -18,7 +18,7 @@ mandatory|system/disable_uncommon_firewire.sh
 mandatory|user/add_user_password_with_sudo.sh
 
 # Manage network
-mandatory|network/ssh_change_port.sh
+#mandatory|network/ssh_change_port.sh
 optional|ssh_add_banner.sh
 
 # Manage tools related to security
