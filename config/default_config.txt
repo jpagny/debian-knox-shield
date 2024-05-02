@@ -18,14 +18,14 @@
 mandatory|user/add_user_password_with_sudo.sh
 
 # Manage network
-#mandatory|network/ssh_change_port.sh
+mandatory|network/ssh_change_port.sh
 optional|ssh_add_banner.sh
 
 # Manage tools related to security
-#mandatory|firewall/ufw_settings.sh
+mandatory|firewall/ufw_settings.sh
 mandatory|tool_secure/fail2ban.sh
-#mandatory|tool_secure/knockd.sh
-#mandatory|tool_secure/aide.sh
+mandatory|tool_secure/knockd.sh
+mandatory|tool_secure/aide.sh
 
 # Manage variety of tools
 # mandatory|tool_util/mail-server.sh
@@ -36,14 +36,14 @@ mandatory|tool_util/net-tools.sh
 mandatory|tool_util/davfs2.sh
 
 # Manage scheduler
-#mandatory|scheduler/auto_update_upgrade.sh
-#mandatory|scheduler/close_ssh_port.sh
-#mandatory|scheduler/aide_report_mail.sh
+mandatory|scheduler/auto_update_upgrade.sh
+mandatory|scheduler/close_ssh_port.sh
+mandatory|scheduler/aide_report_mail.sh
 
 # End 
-#mandatory|network/ssh_deactivate_root.sh
-#mandatory|system/disable_root.sh
+mandatory|network/ssh_deactivate_root.sh
+mandatory|system/disable_root.sh
 
 # Report
-#mandatory|tool_report/chkrootkit.sh
-#mandatory|tool_report/lynis.sh
+mandatory|tool_report/chkrootkit.sh
+mandatory|tool_report/lynis.sh
